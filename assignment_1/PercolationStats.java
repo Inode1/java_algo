@@ -4,7 +4,8 @@ import edu.princeton.cs.algs4.StdStats;
 public class PercolationStats {
     private double meanValue;
     private double stddevValue;
-    private double addValue;
+    private double confidenceLoValue;
+    private double confidenceHiValue;
     
     public PercolationStats(int N, int T) {
         if (N <= 0 || T <= 0) 
@@ -15,7 +16,7 @@ public class PercolationStats {
         Percolation statistics;
         for (int i = 0; i < T; ++i) {
             statistics = new Percolation(N);
-            addValue = 0;
+            double addValue = 0;
             int k, j;
             while (!statistics.percolates()) {               
                 do {
@@ -31,7 +32,8 @@ public class PercolationStats {
         meanCalculate(mean);
         stddevCalculate(mean);
         addValue = 1.96 * stddevValue/Math.sqrt(N);
-        
+        confidenceLoValue = meanValue - addValue;
+        confidenceHiValue = meanValue + addValue;        
     }
     public double mean() { // sample mean of percolation threshold
         return meanValue;
@@ -40,10 +42,10 @@ public class PercolationStats {
         return stddevValue;
     }
     public double confidenceLo() { // low  endpoint of 95% confidence interval
-        return meanValue - addValue;
+        return confidenceLoValue;
     }
     public double confidenceHi() {    // high endpoint of 95% confidence interval
-        return meanValue + addValue;
+        return confidenceHiValue;
     }
     
     private void meanCalculate(double[] mean) {
@@ -56,7 +58,6 @@ public class PercolationStats {
         }
         stddevValue = StdStats.stddev(mean);
     }
-    
     
     public static void main(String[] args) { // test client (described below)
         if (args.length != 2) 
