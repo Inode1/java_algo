@@ -2,19 +2,20 @@ import edu.princeton.cs.algs4.StdRandom;
 import edu.princeton.cs.algs4.StdStats;
 
 public class PercolationStats {
-    private double[] mean;
-    private double[] stddev;
     private double meanValue;
     private double stddevValue;
-    
+    private double addValue;
     
     public PercolationStats(int N, int T) {
-        mean = new double[T];
-        stddev = new double[T];
-        double count;
+        if (N <= 0 || T <= 0) 
+        {
+            throw new java.lang.IllegalArgumentException();
+        }
+        double[] mean = new double[T];
+        Percolation statistics;
         for (int i = 0; i < T; ++i) {
-            Percolation statistics = new Percolation(N);
-            count = 0;
+            statistics = new Percolation(N);
+            addValue = 0;
             int k, j;
             while (!statistics.percolates()) {               
                 do {
@@ -22,29 +23,41 @@ public class PercolationStats {
                     j = StdRandom.uniform(N) + 1;
                 } while(statistics.isOpen(k, j));
                
-                ++count;
+                ++addValue;
                 statistics.open(k, j);                
             }
-            mean[i] = count/(N*N);
+            mean[i] = addValue/(N*N);
         }
+        meanCalculate(mean);
+        stddevCalculate(mean);
+        addValue = 1.96 * stddevValue/Math.sqrt(N);
+        
     }
     public double mean() { // sample mean of percolation threshold
-        meanValue = StdStats.mean(mean);
         return meanValue;
     }
     public double stddev() { // sample standard deviation of percolation threshold
-        for (int i = 0; i < mean.length; ++i) {
-            stddev[0] = mean[0] - meanValue;
-        }
-        stddevValue = StdStats.stddev(stddev);
         return stddevValue;
     }
     public double confidenceLo() { // low  endpoint of 95% confidence interval
-        return meanValue - 1.96 * stddevValue/Math.sqrt(mean.length);
+        return meanValue - addValue;
     }
     public double confidenceHi() {    // high endpoint of 95% confidence interval
-        return meanValue + 1.96 * stddevValue/Math.sqrt(mean.length);
+        return meanValue + addValue;
     }
+    
+    private void meanCalculate(double[] mean) {
+        meanValue = StdStats.mean(mean);
+    }
+    
+    private void stddevCalculate(double[] mean) {
+        for (int i = 0; i < mean.length; ++i) {
+            mean[i] = mean[i] - meanValue;
+        }
+        stddevValue = StdStats.stddev(mean);
+    }
+    
+    
     public static void main(String[] args) { // test client (described below)
         if (args.length != 2) 
         {
