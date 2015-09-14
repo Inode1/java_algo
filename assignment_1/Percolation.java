@@ -3,7 +3,8 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 public class Percolation {
     //private int[] array;
     private boolean[] openFlag;
-    //private int[] range;
+    private boolean[] fullFlag;
+    //private int[] range; 
     
     private int size;
     // use quick algo
@@ -21,9 +22,9 @@ public class Percolation {
         int count = N*N + 2;
         
         unionFind = new WeightedQuickUnionUF(count);
-        
         openFlag = new boolean[count];
-                     
+        fullFlag = new boolean[count];
+        fullFlag[0] = true;
         // my realization
         //array = new int[count];
         //range = new int[count];
@@ -32,62 +33,96 @@ public class Percolation {
                 openFlag[i] = false;
         }*/
     }
-        
-    public void open(int i, int j) {   
+    
+    public void open(int i, int j) {
         int element = elementNumber(i, j);
+        if (openFlag[element]) {
+            return;
+        }        
+        runOpen(i, j);
+        openFlag[element] = true;
+    }
+    
+    private void runOpen(int i, int j) {   
+        int element = elementNumber(i, j);
+        int my = unionFind.find(element);
+        int temp;
         // next element left
         if (j != 1)
         {
             if (openFlag[element - 1]) {
+                temp = unionFind.find(element - 1);
+                fullFlag[temp] = fullFlag[my] || fullFlag[temp];
                 unionFind.union(element, element - 1);
-            }  
+                if (my != temp) {
+                    my = temp;
+                }
+            }
         }
         // rigth
         if (j != size)
         {
             if (openFlag[element + 1]) {
+                temp = unionFind.find(element + 1);
+                fullFlag[temp] = fullFlag[my] || fullFlag[temp];
                 unionFind.union(element, element + 1);
-            }  
+                if (my != temp) {
+                    my = temp;
+                }
+            }
         }
                
         // element -N
         if (i == 1) {
+            fullFlag[my] = true;
             unionFind.union(0, element);
+            temp = unionFind.find(element);
+            if (my != temp) {
+                my = temp;
+            }
         } else {
             if (openFlag[element - size]) {
+                temp = unionFind.find(element - size);
+                fullFlag[temp] = fullFlag[my] || fullFlag[temp];
                 unionFind.union(element, element - size);
-            }            
+                if (my != temp) {
+                    my = temp;
+                }
+            }
         }
         
         // element +N
         if (i == size) {
-            if (!openFlag[1]) {
-                unionFind.union(1, element);
-                openFlag[1] = true;
-            }          
+                temp = unionFind.find(1);
+                fullFlag[temp] = fullFlag[my] || fullFlag[temp];
+                unionFind.union(element, 1);
+                if (my != temp) {
+                    my = temp;
+                }
+            //unionFind.union(element, 1);
         } else {
             if (openFlag[element + size]) {
+                temp = unionFind.find(element + size);
+                fullFlag[temp] = fullFlag[my] || fullFlag[temp];
                 unionFind.union(element, element + size);
+                if (my != temp) {
+                    my = temp;
+                }
             }            
         }
-        openFlag[element] = true;
     }
     
+        
     public boolean isOpen(int i, int j) {     // is site (row i, column j) open?
         return openFlag[elementNumber(i, j)];
     }
     
     public boolean isFull(int i, int j) {     // is site (row i, column j) full?
-        return unionFind.connected(0, elementNumber(i, j));
+        return fullFlag[unionFind.find(elementNumber(i, j))];
     }
     
     public boolean percolates() {             // does the system percolate?
-        for (int i = size*size + 2 - size; i < size*size + 2; ++i) {
-            if (unionFind.connected(0, i)) {
-                return true;
-            }
-        }
-        return false;
+        return fullFlag[1];
     }
     
     private int elementNumber(int i, int j) {
@@ -141,5 +176,6 @@ public class Percolation {
     }*/
            
     public static void main(String[] args) {  // test client (optional)
+        System.out.println(false || true);
     }
 }

@@ -14,9 +14,10 @@ public class PercolationStats {
         }
         double[] mean = new double[T];
         Percolation statistics;
+        double addValue;
         for (int i = 0; i < T; ++i) {
             statistics = new Percolation(N);
-            double addValue = 0;
+            addValue = 0;
             int k, j;
             while (!statistics.percolates()) {               
                 do {
@@ -31,7 +32,7 @@ public class PercolationStats {
         }
         meanCalculate(mean);
         stddevCalculate(mean);
-        addValue = 1.96 * stddevValue/Math.sqrt(N);
+        addValue = 1.96 * stddevValue/Math.sqrt(T);
         confidenceLoValue = meanValue - addValue;
         confidenceHiValue = meanValue + addValue;        
     }
