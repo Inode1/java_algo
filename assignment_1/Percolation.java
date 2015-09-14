@@ -4,9 +4,10 @@ public class Percolation {
     //private int[] array;
     private boolean[] openFlag;
     private boolean[] fullFlag;
-    //private int[] range; 
+    private boolean[] connectBottom; 
     
     private int size;
+    private boolean percol;
     // use quick algo
     private WeightedQuickUnionUF unionFind;
     //    
@@ -24,6 +25,10 @@ public class Percolation {
         unionFind = new WeightedQuickUnionUF(count);
         openFlag = new boolean[count];
         fullFlag = new boolean[count];
+        connectBottom = new boolean[count];
+        for (int i = connectBottom.length - N; i < connectBottom.length; ++i) {
+            connectBottom[i] = true;
+        }
         fullFlag[0] = true;
         // my realization
         //array = new int[count];
@@ -47,16 +52,23 @@ public class Percolation {
         int element = elementNumber(i, j);
         int my = unionFind.find(element);
         int temp;
+        boolean statusFull;
+        boolean statusRecon;
         // next element left
         if (j != 1)
         {
             if (openFlag[element - 1]) {
                 temp = unionFind.find(element - 1);
-                fullFlag[temp] = fullFlag[my] || fullFlag[temp];
+                
+                statusRecon = connectBottom[my] || connectBottom[temp]; 
+                    
+                statusFull = fullFlag[my] || fullFlag[temp];
+                
+                fullFlag[temp] = statusFull;
+                fullFlag[my] = statusFull;
+                connectBottom[temp] = statusRecon;
+                connectBottom[my] = statusRecon;
                 unionFind.union(element, element - 1);
-                if (my != temp) {
-                    my = temp;
-                }
             }
         }
         // rigth
@@ -64,52 +76,65 @@ public class Percolation {
         {
             if (openFlag[element + 1]) {
                 temp = unionFind.find(element + 1);
-                fullFlag[temp] = fullFlag[my] || fullFlag[temp];
+                
+                statusRecon = connectBottom[my] || connectBottom[temp]; 
+                    
+                statusFull = fullFlag[my] || fullFlag[temp];
+                
+                fullFlag[temp] = statusFull;
+                fullFlag[my] = statusFull;
+                connectBottom[temp] = statusRecon;
+                connectBottom[my] = statusRecon;                
                 unionFind.union(element, element + 1);
-                if (my != temp) {
-                    my = temp;
-                }
             }
         }
                
         // element -N
         if (i == 1) {
             fullFlag[my] = true;
-            unionFind.union(0, element);
-            temp = unionFind.find(element);
-            if (my != temp) {
-                my = temp;
-            }
         } else {
             if (openFlag[element - size]) {
                 temp = unionFind.find(element - size);
-                fullFlag[temp] = fullFlag[my] || fullFlag[temp];
+                
+                statusRecon = connectBottom[my] || connectBottom[temp]; 
+                    
+                statusFull = fullFlag[my] || fullFlag[temp];
+                
+                fullFlag[temp] = statusFull;
+                fullFlag[my] = statusFull;
+                connectBottom[temp] = statusRecon;
+                connectBottom[my] = statusRecon;  
+                
                 unionFind.union(element, element - size);
-                if (my != temp) {
-                    my = temp;
-                }
             }
         }
         
         // element +N
         if (i == size) {
-                temp = unionFind.find(1);
-                fullFlag[temp] = fullFlag[my] || fullFlag[temp];
-                unionFind.union(element, 1);
-                if (my != temp) {
-                    my = temp;
-                }
-            //unionFind.union(element, 1);
+            //unionFind.union(0, element);
         } else {
             if (openFlag[element + size]) {
                 temp = unionFind.find(element + size);
-                fullFlag[temp] = fullFlag[my] || fullFlag[temp];
+                
+                statusRecon = connectBottom[my] || connectBottom[temp];
+                    
+                statusFull = fullFlag[my] || fullFlag[temp];
+                
+                fullFlag[temp] = statusFull;
+                fullFlag[my] = statusFull;
+                connectBottom[temp] = statusRecon;
+                connectBottom[my] = statusRecon;  
+                
                 unionFind.union(element, element + size);
-                if (my != temp) {
-                    my = temp;
-                }
             }            
+        } 
+        
+        fullFlag[unionFind.find(my)] = fullFlag[my];
+        connectBottom[unionFind.find(my)] = connectBottom[my];
+        if (fullFlag[my] && connectBottom[my]) {
+            percol = true;
         }
+        
     }
     
         
@@ -122,7 +147,7 @@ public class Percolation {
     }
     
     public boolean percolates() {             // does the system percolate?
-        return fullFlag[1];
+        return percol;
     }
     
     private int elementNumber(int i, int j) {
@@ -176,6 +201,5 @@ public class Percolation {
     }*/
            
     public static void main(String[] args) {  // test client (optional)
-        System.out.println(false || true);
     }
 }
