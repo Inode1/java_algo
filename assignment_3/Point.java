@@ -1,5 +1,10 @@
 import java.util.Comparator;
 import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.StdRandom;
+import edu.princeton.cs.algs4.StdOut;
+import edu.princeton.cs.algs4.In;
+
+import java.util.Arrays;
 
 public class Point implements Comparable<Point> {
 
@@ -24,6 +29,7 @@ public class Point implements Comparable<Point> {
     public void draw() {
         /* DO NOT MODIFY */
         StdDraw.point(x, y);
+        StdDraw.filledCircle(x,y, 150);
     }
 
     /**
@@ -55,7 +61,7 @@ public class Point implements Comparable<Point> {
         							: Double.POSITIVE_INFINITY; 
         }
 
-        return (that.y - this.y)/(that.x - this.x);
+        return (double)(that.y - this.y)/(that.x - this.x);
     }
 
     /**
@@ -72,9 +78,32 @@ public class Point implements Comparable<Point> {
      */
     public int compareTo(Point that) {
         /* YOUR CODE HERE */
+        if (that == null) {
+            throw new java.lang.NullPointerException();
+        }
         int compare = this.y - that.y;
         return compare != 0 ? compare 
         					: this.x - that.x;
+    }
+
+    private int multipleAngelCalculate(Point lhs, Point rhs) {
+        double leftAngle = slopeTo(lhs);
+        double rightAngle = slopeTo(rhs);
+        if (leftAngle == Double.NEGATIVE_INFINITY) {
+            return -1;
+        }
+
+        if (rightAngle == Double.NEGATIVE_INFINITY) {
+            return 1;
+        }
+
+        if (leftAngle == rightAngle) {
+            return 0;
+        }
+        if (leftAngle > rightAngle) {
+            return -1;
+        }
+        return 1;           
     }
 
     /**
@@ -85,7 +114,27 @@ public class Point implements Comparable<Point> {
      */
     public Comparator<Point> slopeOrder() {
         /* YOUR CODE HERE */
-        //return new Point;
+        return new MyComparator();
+    }
+
+    private class MyComparator implements Comparator<Point> {
+        public int compare(Point lhs, Point rhs) {
+            int dyLhs = lhs.y - y;
+            int dyRhs = rhs.y - y;
+
+            if (dyLhs == 0 && dyRhs == 0) {
+                return 0;
+            }
+
+            if (dyLhs >= 0 && dyRhs < 0) {
+                return -1;
+            }
+
+            if (dyRhs >= 0 && dyLhs < 0) {
+                return 1;
+            }
+            return multipleAngelCalculate(lhs, rhs);
+        }
     }
 
 
@@ -106,5 +155,37 @@ public class Point implements Comparable<Point> {
      */
     public static void main(String[] args) {
         /* YOUR CODE HERE */
+        // read the N points from a file
+        In in = new In(args[0]);
+        int N = in.readInt();
+        Point[] points = new Point[N];
+        for (int i = 0; i < N; i++) {
+            int x = in.readInt();
+            int y = in.readInt();
+            points[i] = new Point(x, y);
+        }
+
+        // draw the points
+        StdDraw.show(0);
+        StdDraw.setXscale(0, 32768);
+        StdDraw.setYscale(0, 32768);
+        for (Point p : points) {
+            p.draw();
+        }
+        StdDraw.show();
+
+/*        Arrays.sort(points, 0, points.length);
+
+        for (int i = 4; i < points.length; ++i) {
+            points[3].drawTo(points[i]);
+        }*/
+
+
+        // print and draw the line segments
+        FastCollinearPoints collinear = new FastCollinearPoints(points);
+        for (LineSegment segment : collinear.segments()) {
+            StdOut.println(segment);
+            segment.draw();
+        }
     }
 }
