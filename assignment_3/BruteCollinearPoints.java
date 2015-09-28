@@ -8,30 +8,36 @@ public class BruteCollinearPoints {
         if (points == null) {
             throw new java.lang.NullPointerException();
         }
-        Arrays.sort(points);
 
-        for (int i = 1; i < points.length; ++i) {
-            if (points[i-1].compareTo(points[i]) == 0) {
+        Point[] pointsCopy = new Point[points.length];
+        for (int i = 0; i < points.length; ++i) {
+            pointsCopy[i] = pointsp[i];
+        } 
+
+        Arrays.sort(pointsCopy);
+
+        for (int i = 1; i < pointsCopy.length; ++i) {
+            if (pointsCopy[i-1].compareTo(pointsCopy[i]) == 0) {
                 throw new java.lang.IllegalArgumentException();
             }
         }
         boolean find;
-        isPointInclude = new boolean[points.length];
+        isPointInclude = new boolean[pointsCopy.length];
         double slope;
-        for (int i = 0; i < points.length; ++i) {
+        for (int i = 0; i < pointsCopy.length; ++i) {
             find = false;
-            for (int j = i + 1; j < points.length && !find; ++j) {
+            for (int j = i + 1; j < pointsCopy.length && !find; ++j) {
                 if (isPointInclude[i] && isPointInclude[j]) {
                     continue;
                 }
 
-                slope = points[i].slopeTo(points[j]);
-                for (int k = j + 1; k < points.length && !find; ++k) {
-                    if (slope != points[j].slopeTo(points[k]) || (isPointInclude[j] && isPointInclude[k])) {
+                slope = pointsCopy[i].slopeTo(pointsCopy[j]);
+                for (int k = j + 1; k < pointsCopy.length && !find; ++k) {
+                    if (slope != pointsCopy[j].slopeTo(pointsCopy[k]) || (isPointInclude[j] && isPointInclude[k])) {
                         continue;
                     }
-                    for (int z = k + 1; z < points.length && !find; ++z) {
-                        if (slope != points[k].slopeTo(points[z]) || (isPointInclude[k] && isPointInclude[z])) {
+                    for (int z = k + 1; z < pointsCopy.length && !find; ++z) {
+                        if (slope != pointsCopy[k].slopeTo(pointsCopy[z]) || (isPointInclude[k] && isPointInclude[z])) {
                             continue;
                         }
                         isPointInclude[i] = true;
@@ -39,7 +45,7 @@ public class BruteCollinearPoints {
                         isPointInclude[k] = true;
                         isPointInclude[z] = true;
 
-                        lineSegments.add(new LineSegment(points[i], points[z]));
+                        lineSegments.add(new LineSegment(pointsCopy[i], pointsCopy[z]));
                         find = true;
                     }                    
                 }

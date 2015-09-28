@@ -1,10 +1,7 @@
 import java.util.Comparator;
 import edu.princeton.cs.algs4.StdDraw;
-import edu.princeton.cs.algs4.StdRandom;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.In;
-
-import java.util.Arrays;
 
 public class Point implements Comparable<Point> {
 
@@ -29,7 +26,6 @@ public class Point implements Comparable<Point> {
     public void draw() {
         /* DO NOT MODIFY */
         StdDraw.point(x, y);
-        StdDraw.filledCircle(x,y, 150);
     }
 
     /**
@@ -57,11 +53,15 @@ public class Point implements Comparable<Point> {
     public double slopeTo(Point that) {
         /* YOUR CODE HERE */
         if (this.x == that.x) {
-        	return this.y == that.y ? Double.NEGATIVE_INFINITY 
-        							: Double.POSITIVE_INFINITY; 
+            if (this.y == that.y) {
+                return Double.NEGATIVE_INFINITY;
+            }
+            return Double.POSITIVE_INFINITY;
         }
-
-        return (double)(that.y - this.y)/(that.x - this.x);
+        if (that.y == this.y) {
+            return +0.0;
+        }
+        return (double) (that.y - this.y)/(that.x - this.x);
     }
 
     /**
@@ -82,28 +82,10 @@ public class Point implements Comparable<Point> {
             throw new java.lang.NullPointerException();
         }
         int compare = this.y - that.y;
-        return compare != 0 ? compare 
-        					: this.x - that.x;
-    }
-
-    private int multipleAngelCalculate(Point lhs, Point rhs) {
-        double leftAngle = slopeTo(lhs);
-        double rightAngle = slopeTo(rhs);
-        if (leftAngle == Double.NEGATIVE_INFINITY) {
-            return -1;
+        if (compare == 0) {
+            return this.x - that.x;
         }
-
-        if (rightAngle == Double.NEGATIVE_INFINITY) {
-            return 1;
-        }
-
-        if (leftAngle == rightAngle) {
-            return 0;
-        }
-        if (leftAngle > rightAngle) {
-            return -1;
-        }
-        return 1;           
+        return compare;
     }
 
     /**
@@ -119,21 +101,22 @@ public class Point implements Comparable<Point> {
 
     private class MyComparator implements Comparator<Point> {
         public int compare(Point lhs, Point rhs) {
-            int dyLhs = lhs.y - y;
-            int dyRhs = rhs.y - y;
-
-            if (dyLhs == 0 && dyRhs == 0) {
+            double leftAngle = slopeTo(lhs);
+            double rightAngle = slopeTo(rhs);
+            if (leftAngle == rightAngle) {
                 return 0;
             }
-
-            if (dyLhs >= 0 && dyRhs < 0) {
+            if (leftAngle >= 0 && rightAngle < 0) {
+                return 1;
+            }
+            if (rightAngle >= 0 && leftAngle < 0) {
+                return -1;
+            }
+            if ((leftAngle - rightAngle) < 0) {
                 return -1;
             }
 
-            if (dyRhs >= 0 && dyLhs < 0) {
-                return 1;
-            }
-            return multipleAngelCalculate(lhs, rhs);
+            return 1;
         }
     }
 
@@ -169,15 +152,25 @@ public class Point implements Comparable<Point> {
         StdDraw.show(0);
         StdDraw.setXscale(0, 32768);
         StdDraw.setYscale(0, 32768);
+        StdDraw.clear();
         for (Point p : points) {
             p.draw();
-        }
+        }   
         StdDraw.show();
-
-/*        Arrays.sort(points, 0, points.length);
-
-        for (int i = 4; i < points.length; ++i) {
-            points[3].drawTo(points[i]);
+        
+/*        Arrays.sort(points);
+        for (int i = 1; i < points.length; ++i) {
+            StdDraw.clear();
+            for (Point p : points) {
+                p.draw();
+            }   
+            Arrays.sort(points, i, points.length, points[i-1].slopeOrder());
+            for (int j = i; j < points.length; ++j) {
+                points[i-1].drawTo(points[j]);
+                StdDraw.show(500);
+            }
+            StdDraw.show(2000);
+            Arrays.sort(points, i, points.length);
         }*/
 
 
