@@ -2,7 +2,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class FastCollinearPoints {
-    private boolean[] isPointInclude;
+    private boolean[] isConnected;
+    private int length;
     private ArrayList<LineSegment> lineSegments = new ArrayList<LineSegment>();   
     public FastCollinearPoints(Point[] points) {    // finds all line segments containing 4 or more points
         if (points == null) {
@@ -10,7 +11,7 @@ public class FastCollinearPoints {
         }
         Point[] pointsCopy = new Point[points.length];
         for (int i = 0; i < points.length; ++i) {
-            pointsCopy[i] = pointsp[i];
+            pointsCopy[i] = points[i];
         } 
         Arrays.sort(pointsCopy);
 
@@ -19,36 +20,42 @@ public class FastCollinearPoints {
                 throw new java.lang.IllegalArgumentException();
             }
         }
-        double slope;
+        length = pointsCopy.length;
+        isConnected = new boolean[length * length];
+
         int collinearNumber = 0;
-        isPointInclude = new boolean[pointsCopy.length];
-        for (int i = 1; i < pointsCopy.length - 3; ++i) {
+        double slope;
+        for (int i = 1; i < pointsCopy.length; ++i) {
             Arrays.sort(pointsCopy, i, pointsCopy.length, pointsCopy[i - 1].slopeOrder());
-            for (int k = i; k < pointsCopy.length; ++k) {
-                if (isPointInclude[i - 1] && isPointInclude[k]) {
-                    continue;
+            int j = i + 1;
+            while (j < pointsCopy.length) {
+                if (isConnected(useLoop(points, pointsCopy[i - 1]), useLoop(points, pointsCopy[j - 1]))) {
+                        ++j;
+                        continue;
                 }
-                slope = pointsCopy[i - 1].slopeTo(pointsCopy[k++]);
-                while (k < pointsCopy.length) {
-                    if (slope == pointsCopy[i - 1].slopeTo(pointsCopy[k]) && (!isPointInclude[k - 1] || !isPointInclude[k])) {
-                        ++collinearNumber;
-                        ++k;
-                    } else {
+                slope = pointsCopy[i - 1].slopeTo(pointsCopy[j - 1]);
+                while (j < pointsCopy.length && slope == pointsCopy[j - 1].slopeTo(pointsCopy[j])) {
+                    if (isConnected(useLoop(points, pointsCopy[j - 1]),useLoop(points, pointsCopy[j]))) {
                         break;
                     }
+                    ++collinearNumber;
+                    ++j;
                 }
-
                 if (collinearNumber >= 2) {
-                    for ( ;collinearNumber == 0; ) {
-                        isPointInclude[k - collinearNumber] = true;
-                        --collinearNumber;
+                    int z = j - 1;    
+                    lineSegments.add(new LineSegment(pointsCopy[i - 1], pointsCopy[z]));
+                    int last = 0;
+                    int first = useLoop(points, pointsCopy[z]);
+                    for (; collinearNumber-- != 0; ) {                        
+                        last = useLoop(points, pointsCopy[--z]);
+                        isConnected[last*length + first] = true;
+                        first = last;
                     }
-                    isPointInclude[i] = true;
-                    lineSegments.add(new LineSegment(pointsCopy[i - 1], pointsCopy[k-1]));
-                } else {
-                    --k;
+                    first = useLoop(points, pointsCopy[i - 1]);
+                    isConnected[first*length + last] = true;                                    
                 }
                 collinearNumber = 0;
+                ++j;
             }
             Arrays.sort(pointsCopy, i, pointsCopy.length);
         }
@@ -60,5 +67,21 @@ public class FastCollinearPoints {
     
     public LineSegment[] segments() {               // the line segments
         return lineSegments.toArray(new LineSegment[lineSegments.size()]);
+    }
+
+    private int useLoop(Point[] arr, Point targetValue) {
+        //Arrays.binarySearch(pointsCopy, firstElement, length, targetValue, pointsCopy[firstElement - 1].slopeOrder());
+
+        for(int i = 0; i < arr.length; ++i){
+            if(arr[i].compareTo(targetValue) == 0)
+            {
+                return i;
+            }
+        }
+        return 0;   
+    }
+
+    private boolean isConnected(int lhs, int rhs) {
+        return isConnected[lhs * length + rhs];
     }
 }

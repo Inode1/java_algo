@@ -1,7 +1,15 @@
+/******************************************************************************
+ *  Compilation:  javac Point.java
+ *  Execution:    java Point
+ *  Dependencies: none
+ *  
+ *  An immutable data type for points in the plane.
+ *  For use on Coursera, Algorithms Part I programming assignment.
+ *
+ ******************************************************************************/
+
 import java.util.Comparator;
 import edu.princeton.cs.algs4.StdDraw;
-import edu.princeton.cs.algs4.StdOut;
-import edu.princeton.cs.algs4.In;
 
 public class Point implements Comparable<Point> {
 
@@ -52,16 +60,6 @@ public class Point implements Comparable<Point> {
      */
     public double slopeTo(Point that) {
         /* YOUR CODE HERE */
-        if (this.x == that.x) {
-            if (this.y == that.y) {
-                return Double.NEGATIVE_INFINITY;
-            }
-            return Double.POSITIVE_INFINITY;
-        }
-        if (that.y == this.y) {
-            return +0.0;
-        }
-        return (double) (that.y - this.y)/(that.x - this.x);
     }
 
     /**
@@ -78,14 +76,6 @@ public class Point implements Comparable<Point> {
      */
     public int compareTo(Point that) {
         /* YOUR CODE HERE */
-        if (that == null) {
-            throw new java.lang.NullPointerException();
-        }
-        int compare = this.y - that.y;
-        if (compare == 0) {
-            return this.x - that.x;
-        }
-        return compare;
     }
 
     /**
@@ -96,28 +86,6 @@ public class Point implements Comparable<Point> {
      */
     public Comparator<Point> slopeOrder() {
         /* YOUR CODE HERE */
-        return new MyComparator();
-    }
-
-    private class MyComparator implements Comparator<Point> {
-        public int compare(Point lhs, Point rhs) {
-            double leftAngle = slopeTo(lhs);
-            double rightAngle = slopeTo(rhs);
-            if (leftAngle == rightAngle) {
-                return 0;
-            }
-            if (leftAngle >= 0 && rightAngle < 0) {
-                return 1;
-            }
-            if (rightAngle >= 0 && leftAngle < 0) {
-                return -1;
-            }
-            if ((leftAngle - rightAngle) < 0) {
-                return -1;
-            }
-
-            return 1;
-        }
     }
 
 
@@ -138,48 +106,5 @@ public class Point implements Comparable<Point> {
      */
     public static void main(String[] args) {
         /* YOUR CODE HERE */
-        // read the N points from a file
-        In in = new In(args[0]);
-        int N = in.readInt();
-        Point[] points = new Point[N];
-        for (int i = 0; i < N; i++) {
-            int x = in.readInt();
-            int y = in.readInt();
-            points[i] = new Point(x, y);
-        }
-
-        // draw the points
-        StdDraw.show(0);
-        StdDraw.setXscale(-1000, 32768);
-        StdDraw.setYscale(-1000, 32768);
-        StdDraw.clear();
-        for (Point p : points) {
-            p.draw();
-        }   
-        StdDraw.show();
-        
-/*        Arrays.sort(points);
-        for (int i = 1; i < points.length; ++i) {
-            StdDraw.clear();
-            for (Point p : points) {
-                p.draw();
-            }   
-            Arrays.sort(points, i, points.length, points[i-1].slopeOrder());
-            for (int j = i; j < points.length; ++j) {
-                points[i-1].drawTo(points[j]);
-                StdDraw.show(500);
-            }
-            StdDraw.show(2000);
-            Arrays.sort(points, i, points.length);
-        }*/
-
-
-        // print and draw the line segments
-        FastCollinearPoints collinear = new FastCollinearPoints(points);
-        for (LineSegment segment : collinear.segments()) {
-            StdOut.println(segment);
-            segment.draw();
-        }
-        StdOut.println(collinear.numberOfSegments());
     }
 }

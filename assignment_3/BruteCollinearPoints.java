@@ -2,8 +2,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class BruteCollinearPoints {
-    private boolean[] isPointInclude;
     private ArrayList<LineSegment> lineSegments = new ArrayList<LineSegment>();
+    private boolean[] isConnected;
+    private int length;
     public BruteCollinearPoints(Point[] points) {    // finds all line segments containing 4 points
         if (points == null) {
             throw new java.lang.NullPointerException();
@@ -11,7 +12,7 @@ public class BruteCollinearPoints {
 
         Point[] pointsCopy = new Point[points.length];
         for (int i = 0; i < points.length; ++i) {
-            pointsCopy[i] = pointsp[i];
+            pointsCopy[i] = points[i];
         } 
 
         Arrays.sort(pointsCopy);
@@ -21,29 +22,31 @@ public class BruteCollinearPoints {
                 throw new java.lang.IllegalArgumentException();
             }
         }
+        length = pointsCopy.length;
+        isConnected = new boolean[length * length];
         boolean find;
-        isPointInclude = new boolean[pointsCopy.length];
         double slope;
         for (int i = 0; i < pointsCopy.length; ++i) {
-            find = false;
-            for (int j = i + 1; j < pointsCopy.length && !find; ++j) {
-                if (isPointInclude[i] && isPointInclude[j]) {
+            for (int j = i + 1; j < pointsCopy.length; ++j) {
+                if (isConnected(i, j)) {
                     continue;
                 }
+                find = false;
 
                 slope = pointsCopy[i].slopeTo(pointsCopy[j]);
                 for (int k = j + 1; k < pointsCopy.length && !find; ++k) {
-                    if (slope != pointsCopy[j].slopeTo(pointsCopy[k]) || (isPointInclude[j] && isPointInclude[k])) {
+                    if (slope != pointsCopy[i].slopeTo(pointsCopy[k]) || isConnected(j, k)) {
                         continue;
                     }
                     for (int z = k + 1; z < pointsCopy.length && !find; ++z) {
-                        if (slope != pointsCopy[k].slopeTo(pointsCopy[z]) || (isPointInclude[k] && isPointInclude[z])) {
-                            continue;
+                        if (slope != pointsCopy[i].slopeTo(pointsCopy[z]) || isConnected(k, z)) {
+                              continue;
                         }
-                        isPointInclude[i] = true;
-                        isPointInclude[j] = true;
-                        isPointInclude[k] = true;
-                        isPointInclude[z] = true;
+                        isConnected[i*length + j] = true;
+
+                        isConnected[j*length + k] = true;
+
+                        isConnected[k*length + z] = true;
 
                         lineSegments.add(new LineSegment(pointsCopy[i], pointsCopy[z]));
                         find = true;
@@ -65,5 +68,12 @@ public class BruteCollinearPoints {
         if (point == null) {
             throw new java.lang.NullPointerException();
         }
+    }
+
+    private boolean isConnected(int lhs, int rhs) {
+        if (isConnected[lhs * length + rhs]) {
+            return true;
+        }
+        return false;
     }
 }
