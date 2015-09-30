@@ -3,6 +3,7 @@ import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.In;
 import java.lang.System;
+import java.util.Arrays;
 
 public class Point implements Comparable<Point> {
 
@@ -159,7 +160,7 @@ public class Point implements Comparable<Point> {
         }   
         StdDraw.show();
         
-/*        Arrays.sort(points);
+ /*       Arrays.sort(points);
         for (int i = 1; i < points.length; ++i) {
             StdDraw.clear();
             for (Point p : points) {
@@ -171,7 +172,20 @@ public class Point implements Comparable<Point> {
                 StdDraw.show(500);
             }
             StdDraw.show(2000);
-            Arrays.sort(points, i, points.length);
+            Point firstElement = points[i];
+            int j = i;
+ /*       for (Point value: pointsCopy) {
+            System.out.println(value);
+        }
+            for (int k = i + 1; k < points.length; ++k) {
+            if (points[k].compareTo(firstElement) < 0) {
+                firstElement = points[k];
+                j = k;
+            }
+        }
+        points[j] = points[i];
+        points[i] = firstElement;
+            //Arrays.sort(points, i, points.length);
         }*/
 
         long start = System.nanoTime();

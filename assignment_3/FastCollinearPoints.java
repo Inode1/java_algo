@@ -8,16 +8,37 @@ import java.lang.System;
 public class FastCollinearPoints {
     private Point[] pointsCopy;
     private ArrayList<LineStruct> lineSegments = new ArrayList<LineStruct>();
+    private LineSegment[] temp = null;
     private static final Comparator<LineStruct> BY_SLOPE = new LineStruct.ComapareBySlope();
-    private static final Comparator<LineStruct> BY_POINT = new LineStruct.ComapareByPoint();
     private static class LineStruct {
         private final Point biggest;
         private final Point little;
-        public LineStruct(Point little, Point biggest) {
+        private final double slope;
+        public LineStruct(Point little, Point biggest, double slope) {
             this.biggest = biggest;
             this.little = little;
+            this.slope = slope;
         }
+
         private static class ComapareBySlope implements Comparator<LineStruct> {
+            public int compare(LineStruct lhs, LineStruct rhs) {
+                if (lhs.slope == rhs.slope) {
+                    return 0;
+                }
+                if (lhs.slope >= 0 && rhs.slope < 0) {
+                    return 1;
+                }
+                if (rhs.slope >= 0 && lhs.slope < 0) {
+                    return -1;
+                }
+                if ((lhs.slope - rhs.slope) < 0) {
+                    return -1;
+                }
+                return 1;   
+            }
+        }
+
+/*        private static class ComapareBySlope implements Comparator<LineStruct> {
             public int compare(LineStruct lhs, LineStruct rhs) {
                 double leftAngle = lhs.little.slopeTo(lhs.biggest);
                 double rightAngle = rhs.little.slopeTo(rhs.biggest);
@@ -35,37 +56,16 @@ public class FastCollinearPoints {
                 }
                 return 1;   
             }
-        }
-
-        private static class ComapareByPoint implements Comparator<LineStruct> {
-            public int compare(LineStruct lhs, LineStruct rhs) {
-                return lhs.biggest.compareTo(rhs.biggest);
-            }
-        }
+        }*/
 
     }
-            private int compareTo(double leftAngle, double rightAngle) {
-            if (leftAngle == rightAngle) {
-                return 0;
-            }
-            if (leftAngle >= 0 && rightAngle < 0) {
-                return 1;
-            }
-            if (rightAngle >= 0 && leftAngle < 0) {
-                return -1;
-            }
-            if ((leftAngle - rightAngle) < 0) {
-                return -1;
-            }
-            return 1;              
-        }
 
     public FastCollinearPoints(Point[] points) {    // finds all line segments containing 4 or more points
         if (points == null) {
             throw new java.lang.NullPointerException();
         }
         pointsCopy = new Point[points.length];
-        for (int i = 0; i < points.length; ++i) {
+        for (int i = 0; i < pointsCopy.length; ++i) {
             pointsCopy[i] = points[i];
         } 
         Arrays.sort(pointsCopy);
@@ -80,27 +80,27 @@ public class FastCollinearPoints {
         double slope;
         for (int i = 1; i < pointsCopy.length; ++i) {
             Arrays.sort(pointsCopy, i, pointsCopy.length, pointsCopy[i - 1].slopeOrder());
-            int j = i + 1;
+            int j = i;
             while (j < pointsCopy.length) {
-                slope = pointsCopy[i - 1].slopeTo(pointsCopy[j - 1]);
-                while (j < pointsCopy.length && slope == pointsCopy[j - 1].slopeTo(pointsCopy[j])) {
+                slope = pointsCopy[i - 1].slopeTo(pointsCopy[j++]);
+                while (j < pointsCopy.length && slope == pointsCopy[i - 1].slopeTo(pointsCopy[j])) {
                     ++collinearNumber;
                     ++j;
                 }
                 if (collinearNumber >= 2) {
-                    int z = j - 1;
                     long start = System.nanoTime();
-                    if (!isExist(pointsCopy[i - 1], pointsCopy[z], slope)) {
-                    }
-                    System.out.println("wfwef" + (System.nanoTime() - start));
-
-                    //Collections.sort(lineSegments);                              
+                    isExist(pointsCopy[i - 1], pointsCopy[j - 1], slope);
+                    //System.out.println(System.nanoTime() - start);
+                    //System.out.println("End circit: " + lineSegments.size());                          
                 }
                 collinearNumber = 0;
-                ++j;
             }
-            Arrays.sort(pointsCopy, i, pointsCopy.length);
+            findMinElement(i);
+            System.out.println("min    =" + pointsCopy[i]);
+            //Arrays.sort(pointsCopy, i, pointsCopy.length);
+            System.out.println("min    =" + pointsCopy[i]);
         }
+
     }
 
     public int numberOfSegments() {        // the number of line segments
@@ -108,87 +108,93 @@ public class FastCollinearPoints {
     }
     
     public LineSegment[] segments() {               // the line segments
-        int i = 0;
-        LineSegment[] temp = new LineSegment[lineSegments.size()];
-        for (LineStruct value: lineSegments) {
-            temp[i++] = new LineSegment(value.little, value.biggest);
+        if (temp == null) {
+            int i = 0;
+            if (lineSegments != null){
+                temp = new LineSegment[lineSegments.size()];
+                for (LineStruct value: lineSegments) {
+                    temp[i++] = new LineSegment(value.little, value.biggest);
+                }
+            }
         }
         return temp;
     }
 
-    private boolean isExist(Point little, Point biggest, double slope) {
+    private void isExist(Point little, Point biggest, double slope) {
         int position = 0;
-        LineStruct element = new LineStruct(little, biggest);
+        LineStruct element = new LineStruct(little, biggest, slope);
         long start = System.nanoTime();
-        position = returnLeftPosistions(element, slope);
-        if (position == lineSegments.size()) {
-            lineSegments.add(element);
-            return false;
-        }
-/*        if ((position = Collections.binarySearch(lineSegments, 
+        if ((position = Collections.binarySearch(lineSegments, 
                         element, BY_SLOPE)) < 0) {
-            lineSegments.add(element);
-            Collections.sort(lineSegments, BY_POINT);
-            Collections.sort(lineSegments, BY_SLOPE);
-            return false;
-        }*/
-        System.out.println(System.nanoTime() - start);
-        System.out.println("Element count: " + lineSegments.size());
+            lineSegments.add(- (1 + position), element);
+            return;
+        }
+        //System.out.println(System.nanoTime() - start);
+        //System.out.println("Element count: " + lineSegments.size());
         int result = biggest.compareTo(lineSegments.get(position).biggest);
         while (result < 0) {
-            //|| slope != lineSegments.get(position).little.slopeTo(lineSegments.get(position).biggest)
+            //
             --position;
-            if (position < 0) {
+            if (position < 0 || slope != lineSegments.get(position).slope) {
                 if (position < 0) {
                     lineSegments.add(0, element);
-                    return false;
+                    return;
                 }
-                lineSegments.add(position, element);
-                return false;
+                lineSegments.add(position + 1, element);
+                return;
             }
             result = biggest.compareTo(lineSegments.get(position).biggest);
             if (result == 0) {
-                return true;
+                return;
             }
             if (result > 0) {
-                lineSegments.add(position, element);
-                return false;
+                lineSegments.add(position + 1, element);
+                return;
             }
         }
-//|| slope != lineSegments.get(position).little.slopeTo(lineSegments.get(position).biggest)
+
         while (result > 0) {
             ++position;
-            if (position == lineSegments.size() ) {
+            if (position == lineSegments.size() || slope != lineSegments.get(position).slope) {
                 if (position == lineSegments.size()) {
                     lineSegments.add(element);
-                    return false;
+                    return;
                 }
                 lineSegments.add(position, element);
-                return false;
+                return;
             }
             result = biggest.compareTo(lineSegments.get(position).biggest);
             if (result == 0) {
-                return true;
+                return;
             }
             if (result < 0) {
                 lineSegments.add(position, element);
-                return false;
+                return;
             }       
         }
 
-        return true;
+        return;
     }
-    private int returnLeftPosistions(LineStruct element, double slopeFirst) {
-        int lo = 0;
-        int hi = lineSegments.size() - 1;
-        int result = 0;
-        while (lo <= hi) {
-            int mid = lo + (hi - lo) / 2;
-            result = compareTo(slopeFirst, lineSegments.get(mid).little.slopeTo(lineSegments.get(mid).biggest);
-            if (result < 0) hi = mid - 1;
-            else if (result > 0) lo = mid + 1;
-            else return mid;
+    private void findMinElement(int i) {
+        Point firstElement = pointsCopy[i];
+        int j = i;
+ /*       for (Point value: pointsCopy) {
+            System.out.println(value);
+        }*/
+        for (int k = i + 1; k < pointsCopy.length; ++k) {
+            if (pointsCopy[k].compareTo(firstElement) < 0) {
+                firstElement = pointsCopy[k];
+                j = k;
+            }
         }
-        return mid;
+
+        //System.out.println("min=" + firstElement);
+/*        if (i == j) {
+            System.out.println("min    =" + pointsCopy[i]);
+            return;
+        }*/
+        pointsCopy[j] = pointsCopy[i];
+        pointsCopy[i] = firstElement;
+        //System.out.println("min    =" + pointsCopy[i]);
     }
 }
