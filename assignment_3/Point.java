@@ -2,6 +2,7 @@ import java.util.Comparator;
 import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.In;
+import java.lang.System;
 
 public class Point implements Comparable<Point> {
 
@@ -173,13 +174,14 @@ public class Point implements Comparable<Point> {
             Arrays.sort(points, i, points.length);
         }*/
 
-
+        long start = System.nanoTime();
         // print and draw the line segments
         FastCollinearPoints collinear = new FastCollinearPoints(points);
-        for (LineSegment segment : collinear.segments()) {
+/*        for (LineSegment segment : collinear.segments()) {
             StdOut.println(segment);
             segment.draw();
-        }
+        }*/
         StdOut.println(collinear.numberOfSegments());
+        StdOut.println(System.nanoTime() - start);
     }
 }
