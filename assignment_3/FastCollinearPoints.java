@@ -31,7 +31,7 @@ public class FastCollinearPoints {
                 if (rhs.slope >= 0 && lhs.slope < 0) {
                     return -1;
                 }
-                if ((lhs.slope - rhs.slope) < 0) {
+                if ((rhs.slope - lhs.slope) < 0) {
                     return -1;
                 }
                 return 1;   
@@ -78,29 +78,35 @@ public class FastCollinearPoints {
 
         int collinearNumber = 0;
         double slope;
+        Point lastElement;
+        long sortTime = 0;
+        long findTime = 0;
         for (int i = 1; i < pointsCopy.length; ++i) {
+            long start = System.nanoTime();
             Arrays.sort(pointsCopy, i, pointsCopy.length, pointsCopy[i - 1].slopeOrder());
+            sortTime += System.nanoTime() - start;
             int j = i;
+            start = System.nanoTime();
             while (j < pointsCopy.length) {
+                lastElement = pointsCopy[j];
                 slope = pointsCopy[i - 1].slopeTo(pointsCopy[j++]);
                 while (j < pointsCopy.length && slope == pointsCopy[i - 1].slopeTo(pointsCopy[j])) {
+                    if (pointsCopy[j].compareTo(lastElement) > 0) {
+                        lastElement = pointsCopy[j];
+                    }                    
                     ++collinearNumber;
                     ++j;
                 }
                 if (collinearNumber >= 2) {
-                    long start = System.nanoTime();
-                    isExist(pointsCopy[i - 1], pointsCopy[j - 1], slope);
-                    //System.out.println(System.nanoTime() - start);
-                    //System.out.println("End circit: " + lineSegments.size());                          
+                    isExist(pointsCopy[i - 1], lastElement, slope);                  
                 }
                 collinearNumber = 0;
             }
             findMinElement(i);
-            System.out.println("min    =" + pointsCopy[i]);
-            //Arrays.sort(pointsCopy, i, pointsCopy.length);
-            System.out.println("min    =" + pointsCopy[i]);
+            findTime += System.nanoTime() - start;
         }
-
+        System.out.println("Sort time" + sortTime);
+        System.out.println("Find time" + findTime);
     }
 
     public int numberOfSegments() {        // the number of line segments
@@ -178,23 +184,16 @@ public class FastCollinearPoints {
     private void findMinElement(int i) {
         Point firstElement = pointsCopy[i];
         int j = i;
- /*       for (Point value: pointsCopy) {
-            System.out.println(value);
-        }*/
         for (int k = i + 1; k < pointsCopy.length; ++k) {
             if (pointsCopy[k].compareTo(firstElement) < 0) {
                 firstElement = pointsCopy[k];
                 j = k;
             }
         }
-
-        //System.out.println("min=" + firstElement);
-/*        if (i == j) {
-            System.out.println("min    =" + pointsCopy[i]);
+        if (i == j) {
             return;
-        }*/
+        }
         pointsCopy[j] = pointsCopy[i];
         pointsCopy[i] = firstElement;
-        //System.out.println("min    =" + pointsCopy[i]);
     }
 }

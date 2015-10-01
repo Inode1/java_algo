@@ -114,7 +114,7 @@ public class Point implements Comparable<Point> {
             if (rightAngle >= 0 && leftAngle < 0) {
                 return -1;
             }
-            if ((leftAngle - rightAngle) < 0) {
+            if ((rightAngle - leftAngle) < 0) {
                 return -1;
             }
 
@@ -160,7 +160,7 @@ public class Point implements Comparable<Point> {
         }   
         StdDraw.show();
         
- /*       Arrays.sort(points);
+/*        Arrays.sort(points);
         for (int i = 1; i < points.length; ++i) {
             StdDraw.clear();
             for (Point p : points) {
