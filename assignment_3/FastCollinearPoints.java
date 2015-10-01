@@ -26,13 +26,13 @@ public class FastCollinearPoints {
                 if (lhs.slope == rhs.slope) {
                     return 0;
                 }
+                if (lhs.slope < 0 && rhs.slope >= 0) {
+                    return 1;
+                }
                 if (lhs.slope >= 0 && rhs.slope < 0) {
                     return -1;
                 }
-                if (rhs.slope >= 0 && lhs.slope < 0) {
-                    return 1;
-                }
-                if ((rhs.slope - lhs.slope) < 0) {
+                if (lhs.slope > rhs.slope) {
                     return 1;
                 }
                 return -1;   
@@ -61,33 +61,23 @@ public class FastCollinearPoints {
         Point lastElement;
         long sortTime = 0;
         long findTime = 0;
+        int goodElement = 0;
         //Arrays.sort(pointsCopy, 1, pointsCopy.length, pointsCopy[0].slopeOrder());
         for (int i = 1; i < pointsCopy.length - 1; ++i) {
-            long start = System.nanoTime();
-            //SLOPE = pointsCopy[i - 1].slopeOrder();
-            
-            if (pointsCopy[i-1].slopeTo(pointsCopy[i]) != 0 || pointsCopy[i].slopeTo(pointsCopy[i + 1]) != 0) {
-                //System.out.println(i);
-                Arrays.sort(pointsCopy, i, pointsCopy.length, pointsCopy[i-1].slopeOrder());
-                
-            }
-            
-             
-/*             for (int h = i; h < pointsCopy.length; h++) {
-                System.out.println(pointsCopy[h]);  
-             } 
-             System.out.println("End" + pointsCopy[i-1]);*/
-            //sort(pointsCopy, i);
-            //insertionSort(pointsCopy, i, pointsCopy.length - 1);
-            
+            //long start = System.nanoTime();
+            //System.out.println(goodElement + "and" + i);
+            Arrays.sort(pointsCopy, goodElement > i ? goodElement : i, pointsCopy.length, pointsCopy[i-1].slopeOrder());
             //sortTime += System.nanoTime() - start;
             //System.out.println("Sort time" + "="+ (System.nanoTime() - start));
-            int j = i;
-            start = System.nanoTime();
+            int j = goodElement > i ? goodElement : i;
+            //start = System.nanoTime();
             while (j < pointsCopy.length) {
                 lastElement = pointsCopy[j];
                 slope = pointsCopy[i - 1].slopeTo(pointsCopy[j++]);
                 while (j < pointsCopy.length && slope == pointsCopy[i - 1].slopeTo(pointsCopy[j])) {
+                    if (slope == 0) {
+                        goodElement = j + 1;
+                    }
                     if (pointsCopy[j].compareTo(lastElement) > 0) {
                         lastElement = pointsCopy[j];
                     }                    
@@ -99,11 +89,13 @@ public class FastCollinearPoints {
                 }
                 collinearNumber = 0;
             }
-            findMinElement(i);
+            if (goodElement <= i) {
+                findMinElement(i);
+            }            
             //findTime += System.nanoTime() - start;
         }
         //System.out.println("Sort time" + sortTime);
-        //System.out.println("Find time" + findTime);
+       // System.out.println("Find time" + findTime);
     }
 
     public int numberOfSegments() {        // the number of line segments
