@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import java.lang.System;
+import edu.princeton.cs.algs4.StdRandom;
 
 public class FastCollinearPoints {
     private Point[] pointsCopy;
@@ -26,38 +27,17 @@ public class FastCollinearPoints {
                     return 0;
                 }
                 if (lhs.slope >= 0 && rhs.slope < 0) {
-                    return 1;
+                    return -1;
                 }
                 if (rhs.slope >= 0 && lhs.slope < 0) {
-                    return -1;
-                }
-                if ((rhs.slope - lhs.slope) < 0) {
-                    return -1;
-                }
-                return 1;   
-            }
-        }
-
-/*        private static class ComapareBySlope implements Comparator<LineStruct> {
-            public int compare(LineStruct lhs, LineStruct rhs) {
-                double leftAngle = lhs.little.slopeTo(lhs.biggest);
-                double rightAngle = rhs.little.slopeTo(rhs.biggest);
-                if (leftAngle == rightAngle) {
-                    return 0;
-                }
-                if (leftAngle >= 0 && rightAngle < 0) {
                     return 1;
                 }
-                if (rightAngle >= 0 && leftAngle < 0) {
-                    return -1;
+                if ((rhs.slope - lhs.slope) < 0) {
+                    return 1;
                 }
-                if ((leftAngle - rightAngle) < 0) {
-                    return -1;
-                }
-                return 1;   
+                return -1;   
             }
-        }*/
-
+        }
     }
 
     public FastCollinearPoints(Point[] points) {    // finds all line segments containing 4 or more points
@@ -81,10 +61,27 @@ public class FastCollinearPoints {
         Point lastElement;
         long sortTime = 0;
         long findTime = 0;
-        for (int i = 1; i < pointsCopy.length; ++i) {
+        //Arrays.sort(pointsCopy, 1, pointsCopy.length, pointsCopy[0].slopeOrder());
+        for (int i = 1; i < pointsCopy.length - 1; ++i) {
             long start = System.nanoTime();
-            Arrays.sort(pointsCopy, i, pointsCopy.length, pointsCopy[i - 1].slopeOrder());
-            sortTime += System.nanoTime() - start;
+            //SLOPE = pointsCopy[i - 1].slopeOrder();
+            
+            if (pointsCopy[i-1].slopeTo(pointsCopy[i]) != 0 || pointsCopy[i].slopeTo(pointsCopy[i + 1]) != 0) {
+                //System.out.println(i);
+                Arrays.sort(pointsCopy, i, pointsCopy.length, pointsCopy[i-1].slopeOrder());
+                
+            }
+            
+             
+/*             for (int h = i; h < pointsCopy.length; h++) {
+                System.out.println(pointsCopy[h]);  
+             } 
+             System.out.println("End" + pointsCopy[i-1]);*/
+            //sort(pointsCopy, i);
+            //insertionSort(pointsCopy, i, pointsCopy.length - 1);
+            
+            //sortTime += System.nanoTime() - start;
+            //System.out.println("Sort time" + "="+ (System.nanoTime() - start));
             int j = i;
             start = System.nanoTime();
             while (j < pointsCopy.length) {
@@ -103,10 +100,10 @@ public class FastCollinearPoints {
                 collinearNumber = 0;
             }
             findMinElement(i);
-            findTime += System.nanoTime() - start;
+            //findTime += System.nanoTime() - start;
         }
-        System.out.println("Sort time" + sortTime);
-        System.out.println("Find time" + findTime);
+        //System.out.println("Sort time" + sortTime);
+        //System.out.println("Find time" + findTime);
     }
 
     public int numberOfSegments() {        // the number of line segments
