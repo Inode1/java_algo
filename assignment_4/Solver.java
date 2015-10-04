@@ -1,6 +1,6 @@
 public class Solver {
     public Solver(Board initial) {           // find a solution to the initial board (using the A* algorithm)
-    
+        
     }
     public boolean isSolvable()            // is the initial board solvable?
     
