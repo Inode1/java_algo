@@ -2,8 +2,6 @@ import java.util.Comparator;
 import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.In;
-import java.lang.System;
-import java.util.Arrays;
 
 public class Point implements Comparable<Point> {
 
@@ -105,22 +103,22 @@ public class Point implements Comparable<Point> {
         public int compare(Point lhs, Point rhs) {
             double leftAngle = slopeTo(lhs);
             double rightAngle = slopeTo(rhs);
-            if (leftAngle == rightAngle) {
-                return 0;
-            }
-                if (leftAngle < 0 && rightAngle >= 0) {
-                    return 1;
-                }
-                if (leftAngle >= 0 && rightAngle < 0) {
-                    return -1;
-                }
 
-                if (leftAngle > rightAngle) {
-                    return 1;
-                }
-                return -1;   
+            if (leftAngle < 0 && rightAngle >= 0) {
+                 return 1;
             }
+            if (leftAngle >= 0 && rightAngle < 0) {
+                return -1;
+            }
+            if (leftAngle < rightAngle) {
+                    return -1;
+            }
+            if (leftAngle > rightAngle) {
+                return 1;
+            }
+            return 0;   
         }
+    }
 
 
 
@@ -165,10 +163,9 @@ public class Point implements Comparable<Point> {
         Arrays.sort(points, 1, points.length, points[0].slopeOrder());
         for (int i = 1; i < points.length - 1; ++i) {
             StdDraw.clear();
-            for (Point p : points) {
-                p.draw();
-            }
-            Arrays.sort(points, i, points.length, points[i-1].slopeOrder());
+            
+            //Arrays.sort(points, i, points.length, points[i-1].slopeOrder());
+            System.out.println(java.util.Arrays.toString(points));
             for (int j = i; j < points.length; ++j) {
                 points[i-1].drawTo(points[j]);
                 StdDraw.show(500);
@@ -176,9 +173,7 @@ public class Point implements Comparable<Point> {
             StdDraw.show(2000);
             Point firstElement = points[i];
             int j = i;
-/*        for (Point value: pointsCopy) {
-            System.out.println(value);
-        }
+
             for (int k = i + 1; k < points.length; ++k) {
             if (points[k].compareTo(firstElement) < 0) {
                 firstElement = points[k];
@@ -189,14 +184,19 @@ public class Point implements Comparable<Point> {
         points[i] = firstElement;
         //Arrays.sort(points);
     }*/ 
-        long start = System.nanoTime();
+        //long start = System.nanoTime();
         // print and draw the line segments
         FastCollinearPoints collinear = new FastCollinearPoints(points);
-/*        for (LineSegment segment : collinear.segments()) {
+        for (LineSegment segment : collinear.segments()) {
         StdOut.println(segment);
             segment.draw();
-        }*/
-        //StdOut.println(collinear.numberOfSegments());
-        StdOut.println(System.nanoTime() - start);
+        }
+        StdOut.println(collinear.numberOfSegments());
+        //StdOut.println(System.nanoTime() - start);
+/*
+        Point p = new Point(9, 2);
+        Point q = new Point(1, 2);
+        Point r = new Point(0 , 1);
+        p.slopeOrder().compare(q, r);*/
     }
 }
