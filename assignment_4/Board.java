@@ -1,6 +1,7 @@
 public class Board {
     private int[][] board;
     private int dimension;
+    private int emptyBlock = 0;
     public Board(int[][] blocks) {           // construct a board from an N-by-N array of blocks
         if (blocks = null) {
             throw new java.lang.NullPointerException();
@@ -9,6 +10,9 @@ public class Board {
         for (int i = 0; i < dimension; ++i) {
             for (int j = 0; j < dimension; ++j) {
                 board[i][j] = blocks[i][j];
+                if (board[i][j] == 0) {
+                    emptyBlock = j + dimension * i;
+                }
             }
         }
 
@@ -82,7 +86,33 @@ public class Board {
     }
 
     public Iterable<Board> neighbors() {    // all neighboring boards
-    
+        return new MyCollection();
+    }
+
+    private class MyCollection implements Iterable<Board> {
+        public Iterator<Board> iterator() {
+            return new Neighbors();
+        }
+    }
+
+    private class Neighbors implements Iterator<Board> {
+        int iterationSize;
+        private Neighbors {
+            int row = emptyBlock % dimension;
+            int column = emptyBlock / dimension;
+            if (row == 0 || row == dimension - 1) {
+                if (column == 0 || column == dimension - 1) {
+                    return 
+                }
+            }
+        }
+        boolean hasNext(){
+
+        }
+
+        Board next() {
+            
+        }
     }
 
     public String toString() {               // string representation of this board (in the output format specified below)
