@@ -11,6 +11,7 @@ public class Board {
             throw new java.lang.NullPointerException();
         }
         dimension = blocks.length;
+        board = new int[dimension][dimension];
         for (int i = 0; i < dimension; ++i) {
             for (int j = 0; j < dimension; ++j) {
                 board[i][j] = blocks[i][j];
@@ -155,7 +156,7 @@ public class Board {
                 ++iterationSize;
             }
         }
-        public boolean hasNext(){
+        public boolean hasNext() {
             return iterationSize != 0;
         }
 
