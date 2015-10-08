@@ -1,4 +1,5 @@
 import java.util.Iterator;
+import edu.princeton.cs.algs4.In;
 
 public class Board {
     private int[][] board;
@@ -50,8 +51,8 @@ public class Board {
     private void manhattanCalculate() {
         for (int i = 0; i < dimension; ++i) {
             for (int j = 0; j < dimension; ++j) {
-                if (board[i][j] != 0) {
-                    int row = board[i][j] / dimension;
+                if (board[i][j] != 0 && board[i][j] != j + dimension * i + 1) {
+                    int row = (board[i][j] - 1) / dimension;
                     int column = (board[i][j] - 1) % dimension;
                     row -= i;
                     if (row < 0) {
@@ -129,30 +130,38 @@ public class Board {
             vectorBoardElement = new Board[4];
             // left element
             if (column > 0) {
+                board[row][column] = board[row][column - 1];
+                board[row][column - 1] = 0;
                 vectorBoardElement[iterationSize] = new Board(board);
-                vectorBoardElement[iterationSize].board[row][column] = board[row][column - 1];
-                vectorBoardElement[iterationSize].board[row][column - 1] = 0;
+                board[row][column - 1] = board[row][column]; 
+                board[row][column] = 0;
                 ++iterationSize;
             }
             // top element
             if (row > 0) {
+                board[row][column] = board[row - 1][column];
+                board[row - 1][column] = 0;
                 vectorBoardElement[iterationSize] = new Board(board);
-                vectorBoardElement[iterationSize].board[row][column] = board[row - 1][column];
-                vectorBoardElement[iterationSize].board[row - 1][column] = 0;
+                board[row - 1][column] = board[row][column];
+                board[row][column] = 0;
                 ++iterationSize;
             }
             // right element
             if (column < dimension - 1) {
+                board[row][column] = board[row][column + 1];
+                board[row][column + 1] = 0;
                 vectorBoardElement[iterationSize] = new Board(board);
-                vectorBoardElement[iterationSize].board[row][column] = board[row][column + 1];
-                vectorBoardElement[iterationSize].board[row][column + 1] = 0;
+                board[row][column + 1] = board[row][column];
+                board[row][column] = 0;                
                 ++iterationSize;
             }
             // bottom element
             if (row < dimension - 1) {
+                board[row][column] = board[row + 1][column];
+                board[row + 1][column] = 0;
                 vectorBoardElement[iterationSize] = new Board(board);
-                vectorBoardElement[iterationSize].board[row][column] = board[row + 1][column];
-                vectorBoardElement[iterationSize].board[row + 1][column] = 0;
+                board[row + 1][column] = board[row][column];
+                board[row][column] = 0;
                 ++iterationSize;
             }
         }
@@ -167,6 +176,10 @@ public class Board {
             --iterationSize;
             return vectorBoardElement[iterationSize];
         }
+
+        public void remove() {
+            throw new java.lang.UnsupportedOperationException();
+        }
     }
 
     public String toString() {               // string representation of this board (in the output format specified below)
@@ -179,5 +192,19 @@ public class Board {
         }        
         return result;
     }
-    //public static void main(String[] args) // unit tests (not graded)
+    public static void main(String[] args) { // unit tests (not graded)
+        In in = new In(args[0]);
+        int N = in.readInt();
+        int[][] blocks = new int[N][N];
+        for (int i = 0; i < N; i++)
+            for (int j = 0; j < N; j++)
+                blocks[i][j] = in.readInt();
+        Board initial = new Board(blocks);
+        System.out.println("Hamming: " + initial.hamming() + " Manhattan: " + initial.manhattan());
+        System.out.println(initial);
+        for (Board step: initial.neighbors())
+        {
+            System.out.println(step + " and " + step.hamming() + " Manhattan: " + step.manhattan());     
+        }
+    }
 }
