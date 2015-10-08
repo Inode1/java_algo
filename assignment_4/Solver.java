@@ -2,6 +2,7 @@ import edu.princeton.cs.algs4.MinPQ;
 import java.util.ArrayList;
 import java.util.Iterator;
 import edu.princeton.cs.algs4.In;
+import java.util.Collections;
 
 public class Solver {
     private int movesResult = -1;
@@ -17,7 +18,7 @@ public class Solver {
         QueueData tempResult = null;
         while (notFind)
         {
-            System.out.println(count++);
+            //System.out.println(count++);
 
             tempResult = priorityQueue.delMin();
             // we solve task?
@@ -29,21 +30,27 @@ public class Solver {
             //System.out.println("Value");
             for (Board step: tempResult.refToDataStruct.value.neighbors())
             {
+                if (step.equals(tempResult.refToDataStruct.privious)) {
+                    continue;
+                }
                 //System.out.print(step);
                 //System.out.println(step.hamming() + " and " + step.manhattan());
+                int position = 0;
+                DataStruct currentElement = new DataStruct(step, tempResult.refToDataStruct, tempResult.refToDataStruct.moves + 1);
+                if ((position = Collections.binarySearch(arrayAllData, 
+                                            currentElement)) < 0) {
+                    arrayAllData.add(~position, currentElement);
+                }
+
                 
                 if (step.isGoal())
                 {
                     notFind = false;
-                    arrayAllData.add(new DataStruct(step, tempResult.refToDataStruct, tempResult.refToDataStruct.moves + 1));
-                    tempResult = new QueueData(arrayAllData.get(arrayAllData.size() - 1));
+                    tempResult = new QueueData(currentElement);
                     break;
                 }
-                if (!step.equals(tempResult.refToDataStruct.privious))
-                {
-                    arrayAllData.add(new DataStruct(step, tempResult.refToDataStruct, tempResult.refToDataStruct.moves + 1));
-                    priorityQueue.insert(new QueueData(arrayAllData.get(arrayAllData.size() - 1)));
-                }
+
+                priorityQueue.insert(new QueueData(currentElement));
             }
         }
         System.out.println("Find moves: " + tempResult.refToDataStruct.moves);
@@ -64,7 +71,7 @@ public class Solver {
     }
 
     // for array of all result
-    private class DataStruct {
+    private class DataStruct implements Comparable<DataStruct> {
         private Board value;
         private DataStruct privious;
         private int moves;
@@ -72,6 +79,26 @@ public class Solver {
             this.value = value;
             this.privious = privious;
             this.moves = moves;
+        }
+        public int compareTo(DataStruct that) {
+            if (value.hamming() == that.value.hamming() && value.manhattan() == that.value.manhattan()) {
+                //System.out.println("value:");
+                //System.out.println(value);
+                //System.out.println(that.value);
+                if (value.equals(that.value)) {
+                    //System.out.println("equals");
+                    return 0;
+                }
+                if (moves == that.moves) {
+                    //System.out.println("Alarm");
+                    return 0;
+                }
+                return moves - that.moves;
+            }
+            if (value.hamming() == that.value.hamming()){
+                return value.manhattan() - that.value.manhattan();
+            }
+            return value.hamming() - that.value.hamming();
         }
     }
 
