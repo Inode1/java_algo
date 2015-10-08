@@ -9,21 +9,36 @@ public class Solver {
     private MinPQ<QueueData> priorityQueue = new MinPQ<QueueData>();
     private ArrayList<DataStruct> arrayAllData = new ArrayList<DataStruct>();
     public Solver(Board initial) {           // find a solution to the initial board (using the A* algorithm)
+        long start = System.nanoTime();
         arrayAllData.add(new DataStruct(initial, null, 0));
+        int count = 0;
         priorityQueue.insert(new QueueData(arrayAllData.get(arrayAllData.size() - 1)));
-        
-        QueueData tempResult;
-        while (true)
+        boolean notFind = true;
+        QueueData tempResult = null;
+        while (notFind)
         {
+            System.out.println(count++);
+
             tempResult = priorityQueue.delMin();
             // we solve task?
             if (tempResult.refToDataStruct.value.isGoal())
             {
                 break;
             }
-
+            //System.out.println(tempResult.refToDataStruct.value.hamming() + " and " + tempResult.refToDataStruct.value.manhattan());
+            //System.out.println("Value");
             for (Board step: tempResult.refToDataStruct.value.neighbors())
             {
+                //System.out.print(step);
+                //System.out.println(step.hamming() + " and " + step.manhattan());
+                
+                if (step.isGoal())
+                {
+                    notFind = false;
+                    arrayAllData.add(new DataStruct(step, tempResult.refToDataStruct, tempResult.refToDataStruct.moves + 1));
+                    tempResult = new QueueData(arrayAllData.get(arrayAllData.size() - 1));
+                    break;
+                }
                 if (!step.equals(tempResult.refToDataStruct.privious))
                 {
                     arrayAllData.add(new DataStruct(step, tempResult.refToDataStruct, tempResult.refToDataStruct.moves + 1));
@@ -32,6 +47,7 @@ public class Solver {
             }
         }
         System.out.println("Find moves: " + tempResult.refToDataStruct.moves);
+        System.out.println("Time: " + (System.nanoTime() - start));
 
     }
     public boolean isSolvable() {           // is the initial board solvable?
@@ -66,7 +82,11 @@ public class Solver {
             this.refToDataStruct = refToDataStruct;
         }
         public int compareTo(QueueData that) {
-            return refToDataStruct.moves + refToDataStruct.value.hamming() - that.refToDataStruct.moves - that.refToDataStruct.value.hamming();
+            //return refToDataStruct.moves + refToDataStruct.value.hamming() + refToDataStruct.value.manhattan() - that.refToDataStruct.moves - that.refToDataStruct.value.manhattan() - that.refToDataStruct.value.hamming();
+            if (refToDataStruct.moves + refToDataStruct.value.manhattan() == that.refToDataStruct.moves + that.refToDataStruct.value.manhattan()) {
+                return refToDataStruct.value.hamming() - that.refToDataStruct.value.hamming();
+            }
+            return refToDataStruct.moves + refToDataStruct.value.manhattan() - that.refToDataStruct.moves - that.refToDataStruct.value.manhattan();
         }
     }
 
@@ -83,6 +103,9 @@ public class Solver {
 
         public Board next() {
             return null;
+        }
+        public void remove() {
+            throw new java.lang.UnsupportedOperationException();
         }
     }
     
