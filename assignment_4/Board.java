@@ -182,15 +182,16 @@ public class Board {
         }
     }
 
-    public String toString() {               // string representation of this board (in the output format specified below)
-        String result = "";
-        for (int i = 0; i < dimension; ++i) {
-            for (int j = 0; j < dimension; ++j) {
-                result += board[i][j] + " ";
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        s.append(dimension + "\n");
+        for (int i = 0; i < dimension; i++) {
+            for (int j = 0; j < dimension; j++) {
+                s.append(String.format("%2d ", board[i][j]));
             }
-            result += "\n";
-        }        
-        return result;
+            s.append("\n");
+        }
+        return s.toString();
     }
     public static void main(String[] args) { // unit tests (not graded)
         In in = new In(args[0]);
