@@ -2,7 +2,7 @@ import java.util.Iterator;
 import edu.princeton.cs.algs4.In;
 
 public class Board {
-    private int[][] board;
+    private int[] board;
     private int dimension;
     private int emptyBlock = 0;
     private int hamming = 0;
@@ -12,18 +12,34 @@ public class Board {
             throw new java.lang.NullPointerException();
         }
         dimension = blocks.length;
-        board = new int[dimension][dimension];
+        board = new int[dimension*dimension];
+        int k = 0;
         for (int i = 0; i < dimension; ++i) {
             for (int j = 0; j < dimension; ++j) {
-                board[i][j] = blocks[i][j];
-                if (board[i][j] == 0) {
-                    emptyBlock = j + dimension * i;
+                board[k] = blocks[i][j];
+                if (board[k] == 0) {
+                    emptyBlock = k;
                 }
+                ++k;
             }
         }
         hammingCalculate();
         manhattanCalculate();
 
+    }
+    private Board(Board that) {
+        dimension = that.dimension();
+        board = new int[that.board.length];
+        for (int i = 0; i < that.board.length; ++i)
+        {
+            board[i] = that.board[i];
+            if (board[i] == 0)
+            {
+                emptyBlock = i;
+            }
+        }
+        hammingCalculate();
+        manhattanCalculate();
     }
                                             // (where blocks[i][j] = block in row i, column j)
     public int dimension(){                 // board dimension N
@@ -34,12 +50,10 @@ public class Board {
     }
 
     private void hammingCalculate() {
-        for (int i = 0; i < dimension; ++i) {
-            for (int j = 0; j < dimension; ++j) {
-                if (board[i][j] != 0 && board[i][j] != j + dimension * i + 1) {
-                    ++hamming;
-                }   
-            }
+        for (int i = 0; i < board.length; ++i) {
+            if (board[i] != 0 && board[i] != i + 1) {
+                ++hamming;
+            }   
         }
     }
 
@@ -49,23 +63,22 @@ public class Board {
     }
 
     private void manhattanCalculate() {
-        for (int i = 0; i < dimension; ++i) {
-            for (int j = 0; j < dimension; ++j) {
-                if (board[i][j] != 0 && board[i][j] != j + dimension * i + 1) {
-                    int row = (board[i][j] - 1) / dimension;
-                    int column = (board[i][j] - 1) % dimension;
-                    row -= i;
-                    if (row < 0) {
-                        row = -row;
-                    }
-                    column -= j;
-                    if (column < 0) {
-                        column = -column;
-                    }
-                    manhattan += row + column;
-                }   
-            }
+        for (int i = 0; i < board.length; ++i) {
+            if (board[i] != 0 && board[i] != i + 1) {
+                int row = (board[i] - 1) / dimension;
+                int column = (board[i] - 1) % dimension;
+                row -= i / dimension;
+                if (row < 0) {
+                    row = -row;
+                }
+                column -= i % dimension;
+                if (column < 0) {
+                    column = -column;
+                }
+                manhattan += row + column;
+            }   
         }
+        
     }
 
     public boolean isGoal() {                // is this board the goal board?
@@ -73,20 +86,21 @@ public class Board {
     }
 
     public Board twin() {                   // a board that is obtained by exchanging any pair of blocks
-        Board temp = new Board(board);
-        int i = 0;
-        int j = 0;
-        while (true) {
-            if (temp.board[0][i] != 0) {
-                if (j != 0) {
-                    int element = temp.board[0][i];
-                    temp.board[0][i] = temp.board[0][j];
-                    temp.board[0][j] = element;
+        Board temp = new Board(this);
+        int j = -1;
+        for (int i = 0; i < board.length; ++i)
+        {
+            if (board[i] != 0) 
+            {
+                if (j != -1)
+                {
+                    int swap = temp.board[i];
+                    temp.board[i] = temp.board[j];
+                    temp.board[j] = swap;
                     break;
                 }
                 j = i;
             }
-            ++i;
         }
         return temp;
     }
@@ -101,12 +115,14 @@ public class Board {
         }
 
         Board that = (Board) y;
-        for (int i = 0; i < dimension; ++i) {
-            for (int j = 0; j < dimension; ++j) {
-                if (board[i][j] != that.board[i][j]) {
-                    return false;
-                }    
-            }
+        if (dimension != that.dimension())
+        {
+            return false;
+        }
+        for (int i = 0; i < board.length; ++i) {
+            if (board[i] != that.board[i]) {
+                return false;
+            }    
         }
         return true;       
     }
@@ -130,38 +146,38 @@ public class Board {
             vectorBoardElement = new Board[4];
             // left element
             if (column > 0) {
-                board[row][column] = board[row][column - 1];
-                board[row][column - 1] = 0;
-                vectorBoardElement[iterationSize] = new Board(board);
-                board[row][column - 1] = board[row][column]; 
-                board[row][column] = 0;
+                board[emptyBlock] = board[emptyBlock - 1];
+                board[emptyBlock - 1] = 0;
+                vectorBoardElement[iterationSize] = new Board(Board.this);
+                board[emptyBlock - 1] = board[emptyBlock]; 
+                board[emptyBlock] = 0;
                 ++iterationSize;
             }
             // top element
             if (row > 0) {
-                board[row][column] = board[row - 1][column];
-                board[row - 1][column] = 0;
-                vectorBoardElement[iterationSize] = new Board(board);
-                board[row - 1][column] = board[row][column];
-                board[row][column] = 0;
+                board[emptyBlock] = board[emptyBlock - dimension];
+                board[emptyBlock - dimension] = 0;
+                vectorBoardElement[iterationSize] = new Board(Board.this);
+                board[emptyBlock - dimension] = board[emptyBlock];
+                board[emptyBlock] = 0;
                 ++iterationSize;
             }
             // right element
             if (column < dimension - 1) {
-                board[row][column] = board[row][column + 1];
-                board[row][column + 1] = 0;
-                vectorBoardElement[iterationSize] = new Board(board);
-                board[row][column + 1] = board[row][column];
-                board[row][column] = 0;                
+                board[emptyBlock] = board[emptyBlock + 1];
+                board[emptyBlock + 1] = 0;
+                vectorBoardElement[iterationSize] = new Board(Board.this);
+                board[emptyBlock + 1] = board[emptyBlock];
+                board[emptyBlock] = 0;                
                 ++iterationSize;
             }
             // bottom element
             if (row < dimension - 1) {
-                board[row][column] = board[row + 1][column];
-                board[row + 1][column] = 0;
-                vectorBoardElement[iterationSize] = new Board(board);
-                board[row + 1][column] = board[row][column];
-                board[row][column] = 0;
+                board[emptyBlock] = board[emptyBlock + dimension];
+                board[emptyBlock + dimension] = 0;
+                vectorBoardElement[iterationSize] = new Board(Board.this);
+                board[emptyBlock + dimension] = board[emptyBlock];
+                board[emptyBlock] = 0;
                 ++iterationSize;
             }
         }
@@ -187,7 +203,7 @@ public class Board {
         s.append(dimension + "\n");
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
-                s.append(String.format("%2d ", board[i][j]));
+                s.append(String.format("%2d ", board[i*dimension + j]));
             }
             s.append("\n");
         }
@@ -205,7 +221,16 @@ public class Board {
         System.out.println(initial);
         for (Board step: initial.neighbors())
         {
-            System.out.println(step + " and " + step.hamming() + " Manhattan: " + step.manhattan());     
+            System.out.println(step + " and " + step.hamming() + " Manhattan: " + step.manhattan());
+            if (step.hamming() == 1) 
+            {
+                System.out.println("efwefwe");
+                for (Board stepic: step.neighbors()) {
+                    System.out.println(stepic + " and " + stepic.hamming() + " Manhattan: " + stepic.manhattan());
+                }
+            break;
+            } 
         }
+        System.out.println(initial);
     }
-}
+}   

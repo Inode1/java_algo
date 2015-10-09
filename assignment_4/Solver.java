@@ -11,7 +11,7 @@ public class Solver {
     private MinPQ<QueueData> priorityQueue = new MinPQ<QueueData>();
     private Stack<Board> result = new Stack<Board>();
     public Solver(Board initial) {           // find a solution to the initial board (using the A* algorithm)
-        long start = System.nanoTime();
+        //long start = System.nanoTime();
         priorityQueue.insert(new QueueData(new DataStruct(initial, null, 0)));
         priorityQueue.insert(new QueueData(new DataStruct(initial.twin(), null, 0)));
         boolean notFind = true;
@@ -32,6 +32,7 @@ public class Solver {
                         continue;
                     }
                 }
+
                 DataStruct currentElement = new DataStruct(step, tempResult.refToDataStruct, tempResult.refToDataStruct.moves + 1);
                 if (step.isGoal())
                 {
@@ -53,10 +54,13 @@ public class Solver {
 
         if (result.peek().equals(initial)) {
             movesResult = result.size() - 1;
+        } else 
+        {
+            result = null;
         }
 
-        System.out.println("Find moves: " + tempResult.refToDataStruct.moves);
-        System.out.println("Time: " + (System.nanoTime() - start));
+        //System.out.println("Find moves: " + tempResult.refToDataStruct.moves);
+        /*System.out.println("Time: " + (System.nanoTime() - start));*/
 
     }
     public boolean isSolvable() {           // is the initial board solvable?
