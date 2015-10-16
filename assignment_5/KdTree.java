@@ -21,96 +21,54 @@ public class KdTree {
     
     public void insert(Point2D p) {              // add the point to the set (if it is not already in the set)
         checkPoint(p);
-        if (root == null) {
-            root = new Node(new Point2D(p.x(), p.y()));
-            ++size;
-            return;
-        }
-        Node start = root;
-        boolean vertical = true;
-        
-        while (start != null) {
-            start = GoNext(start, p, vertical);
-            vertical = !vertical;
-        }
-        start = new Node(new Point2D(p.x(), p.y()));
+        root = GoNext(root, p, true);
         System.out.println(size);
         ++size;       
     }
 
-    private Node GoNext(Node start, Point2D p, boolean vertical) {
-                    if (vertical)
-            {
-                if (start.compareForVertical(p) < 0) {
-                    return start.left;
-                }
-                else 
-                {
-                    return start.right;
-                }
+    private Node GoNext(Node root, Point2D point, boolean vertical) {
+            if (root == null) {
+                System.out.println(vertical);
+                return new Node(point);
             }
-            else 
-            {
-                if (start.compareForHorizontal(p) < 0) {
-                    return start.left;
-                }
-                else 
-                {
-                    return start.right;
-                } 
-            }   
-
+            if ((vertical && root.compareForVertical(point) < 0) ||
+                (!vertical && root.compareForHorizontal(point) < 0)) {
+                root.left = GoNext(root.left, point, !vertical);
+            } 
+            else {
+                root.right = GoNext(root.right, point, !vertical);
+            }
+            return root;
     }
     
     public boolean contains(Point2D p) {            // does the set contain point p? 
         checkPoint(p);
         Node start = root;
         boolean vertical = true;
-
         while (start != null) 
-        {
-            if (start.point.equals(p))
-            {
-                break;
+        { 
+            if (start.point.equals(p)) {
+                return true;
             }
-                    if (vertical)
-        {
-            System.out.println("print");
-            System.out.println(start.point);
-            if (start.compareForVertical(p) < 0) {
+            if ((vertical && start.compareForVertical(p) < 0) ||
+                (!vertical && start.compareForHorizontal(p) < 0)) {
                 start = start.left;
-            }
-            else 
-            {
-                start = start.right;
-            }
-            System.out.println(start.point);
-        }
-        else 
-        {
-            if (start.compareForHorizontal(p) < 0) {
-                start = start.left;
-            }
-            else 
-            {
-                start = start.right;
             } 
+            else {
+                start = start.right;
+            }
+            vertical = !vertical;
         }
-        vertical = !vertical;   
-        }
-        return start != null;
+        return false;
     }
     
     public void draw() {                         // draw all points to standard draw 
-        Node start = root;
-        StdDraw.setPenRadius(.01);
+        StdDraw.setPenRadius(.005   );
         // upper side, left side
         Point2D leftUpperAngel = new Point2D(0.0, 1.0);
         // right side, down side
         Point2D rightDownAngel = new Point2D(1.0, 0.0);
-        System.out.println("draw1");
-        draw(start, leftUpperAngel, rightDownAngel, true);
-        System.out.println("draw2");
+        draw(root, leftUpperAngel, rightDownAngel, true);
     }
 
     private void draw(Node next, Point2D leftUpperAngel, Point2D rightDownAngel, boolean vertical) {
@@ -122,17 +80,18 @@ public class KdTree {
 
         if (vertical) {
             StdDraw.setPenColor(StdDraw.RED);
+            System.out.println("Vertic: " + next.point.x() + leftUpperAngel.y() + next.point.x() + rightDownAngel.y());
             StdDraw.line(next.point.x(), leftUpperAngel.y(), next.point.x(), rightDownAngel.y());
-            System.out.println("draw");
-            draw(next.left, leftUpperAngel, new Point2D(next.point.x(), rightDownAngel.y()), !vertical);
-            draw(next.right, new Point2D(next.point.x(), leftUpperAngel.y()), rightDownAngel, !vertical);
+            draw(next.left, leftUpperAngel, new Point2D(next.point.x(), rightDownAngel.y()), false);
+            draw(next.right, new Point2D(next.point.x(), leftUpperAngel.y()), rightDownAngel, false);
         }
         else
         {
             StdDraw.setPenColor(StdDraw.BLUE);
+            System.out.println("Horiz: " + leftUpperAngel.x() + next.point.y() + rightDownAngel.x() + next.point.y());
             StdDraw.line(leftUpperAngel.x(), next.point.y(), rightDownAngel.x(), next.point.y());
-            draw(next.left, new Point2D(leftUpperAngel.x(), next.point.y()), rightDownAngel, !vertical);
-            draw(next.right, leftUpperAngel, new Point2D(rightDownAngel.x(), next.point.y()), !vertical);
+            draw(next.left, new Point2D(leftUpperAngel.x(), next.point.y()), rightDownAngel, true);
+            draw(next.right, leftUpperAngel, new Point2D(rightDownAngel.x(), next.point.y()), true);
         }
     }
     
@@ -163,14 +122,14 @@ public class KdTree {
             this.point = point;
         }
         public int compareForVertical(Point2D point) {
-            if (this.point.x() < point.x()) {
+            if (point.x() < this.point.x()) {
                 return -1;
             }
             return 1;
         }
 
         public int compareForHorizontal(Point2D point) {
-            if (this.point.y() < point.y()) {
+            if (point.y() < this.point.y()) {
                 return -1;
             }
             return 1;
@@ -187,12 +146,19 @@ public class KdTree {
     
     public static void main(String[] args) {                  // unit testing of the methods (optional) 
         KdTree tree = new KdTree();
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 20; i++) {
             double x = StdRandom.uniform(0.0, 1.0);
             double y = StdRandom.uniform(0.0, 1.0);
             System.out.printf("%8.6f %8.6f\n", x, y);
             tree.insert(new Point2D(x, y));
+            StdDraw.clear();
+            tree.draw();
+            StdDraw.show(500);
         }
+
+
+
+
         for (Point2D f: tree.range()) {
             System.out.println(f);
         }
