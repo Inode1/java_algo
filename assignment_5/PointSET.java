@@ -4,7 +4,7 @@ import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 
 public class PointSET {
-    private TreeSet<Point2D> tree = new TreeSet<Point2D>(Point2D.Y_ORDER);/*
+    private TreeSet<Point2D> tree = new TreeSet<Point2D>();/*
     public         PointSET() {                               // construct an empty set of points 
     }
 */
@@ -42,7 +42,7 @@ public class PointSET {
         double min = Double.POSITIVE_INFINITY;
         Point2D result = null;
         for (Point2D point: tree) {
-            double distance = point.distanceTo(p);  
+            double distance = point.distanceSquaredTo(p);  
             if (distance < min) {
                 min = distance;
                 result = point;
