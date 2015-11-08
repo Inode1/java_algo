@@ -2,11 +2,13 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.StdIn;
 import edu.princeton.cs.algs4.StdOut;
+import edu.princeton.cs.algs4.DirectedCycle;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 
 public class SAP {
     private Digraph graph;
-    private boolean[] marks;
+    private boolean[] marksFirst;
     private int[] pathsCost;
     private int path;
     private int ancestor;
@@ -16,102 +18,155 @@ public class SAP {
         if (G == null) {
             throw new java.lang.NullPointerException();
         }
+        DirectedCycle cycle = new DirectedCycle(G);
+        if (cycle.hasCycle()) {
+            throw new java.lang.IllegalArgumentException();
+        }
         graph = new Digraph(G);
-        marks = new boolean[graph.V()];
+        if (!oneRoot()) {
+            throw new java.lang.IllegalArgumentException();
+        }
+        marksFirst = new boolean[graph.V()];
         pathsCost = new int[graph.V()];
     }
 
     // length of shortest ancestral path between v and w; -1 if no such path
     public int length(int v, int w) {
-        validateData(v);
-        validateData(w);
-        bfsMark(v);
-        bfsSearch(w);
-        return path;
-
+        return length(Arrays.asList(v), Arrays.asList(w));
     }
 
     // a common ancestor of v and w that participates in a shortest ancestral path; -1 if no such path
     public int ancestor(int v, int w) {
-        validateData(v);
-        validateData(w);
-        bfsMark(v);
-        bfsSearch(w);
-        return ancestor;
+
+        return ancestor(Arrays.asList(v), Arrays.asList(w));
     }
 
-    // length of shortest ancestral path between any vertex in v and any vertex in w; -1 if no such path
+    // length of shortest ancestral path betMath.ween any vertex in v and any vertex in w; -1 if no such path
     public int length(Iterable<Integer> v, Iterable<Integer> w) {
-        //validateData(v);
-        //validateData(w);
-        return -1;
+        bfsMark(v);
+        bfsSearch(w);
+        if (path == Integer.MAX_VALUE) {
+            return -1;
+        }
+        return path;
     }
 
     // a common ancestor that participates in shortest ancestral path; -1 if no such path
     public int ancestor(Iterable<Integer> v, Iterable<Integer> w) {
-        return -1;
+        bfsMark(v);
+        bfsSearch(w);
+        if (ancestor == Integer.MAX_VALUE) {
+            return -1;
+        }
+        return ancestor;
     }
 
-    private void bfsMark(Iterable<Integer> v) {
-        path = -1;
-        ancestor = -1;
-        for (int i = 0; i < marks.length; ++i) {
-            marks[i] = false;
+    private void bfsMark(Iterable<Integer> vertixIterable) {
+        path = Integer.MAX_VALUE;
+        ancestor = Integer.MAX_VALUE;
+        for (int i = 0; i < marksFirst.length; ++i) {
+            marksFirst[i] = false;
             pathsCost[i] = Integer.MAX_VALUE;
         }
 
-        for (int noCost: v){
-            pathsCost[i] = 0;
+        for (int noCost: vertixIterable) {
+            //System.out.println(noCost);
+            validateData(noCost);
+            pathsCost[noCost] = 0;
         }
 
-        int pathCost = 0;
         ArrayDeque<Integer> q = new ArrayDeque<Integer>();
-        q.add(v);
-        pathsCost[v] = 0;
-        while (!q.isEmpty()) {
-            v = q.remove();
-            pathCost = pathsCost[v] + 1;
-            marks[v] = true;
-            for (int vertix: graph.adj(v)) {
-                if (!marks[vertix]) {
-                    q.add(vertix);
-                    pathsCost[vertix] = pathCost;
+        for (int v: vertixIterable) {
+            if (marksFirst[v]) {
+                continue;
+            }
+
+            q.add(v);
+            while (!q.isEmpty()) {
+                v = q.remove();
+                marksFirst[v] = true;
+                for (int vertix: graph.adj(v)) {
+                    if (!marksFirst[vertix]) {
+                        q.add(vertix);
+                        pathsCost[vertix] = Math.min(pathsCost[v] + 1, pathsCost[vertix]);
+                    }
                 }
             }
         }
+
     }
 
-    private void bfsSearch(int w) {
-        if (marks[w]) {
+    private boolean oneRoot() {
+        int state = 0;
+        for (int i = 0; i < graph.V(); ++i) {
+
+            if (graph.outdegree(i) == 0 && graph.indegree(i) != 0) {
+                
+                //System.out.println(i);
+                ++state;
+            }
+        }
+        if (state > 1) {
+            return false;
+        }
+        return true;
+    }
+/*
+    // depth first search from v
+    private void dfs() {
+        count++;
+        marked[v] = true;
+        for (int w : G.adj(v)) {
+            if (!marked[w]) {
+                dfs(G, w);
+            }
+        }
+    }*/
+
+    private void bfsSearch(Iterable<Integer> vertixIterable) {
+        /*if (marks[w]) {
             ancestor = w;
             path     = pathsCost[w];
             return;
+        }*/
+        for (int noCost: vertixIterable) {
+            if (marksFirst[noCost]) {
+                if (pathsCost[noCost] < path) {
+                    ancestor = noCost;
+                    path     = pathsCost[noCost];
+                } 
+            }
+            pathsCost[noCost] = 0;            
         }
 
-        int pathCost = 0;
-        ArrayDeque<Integer> q = new ArrayDeque<Integer>();
-        q.add(w);
-        pathsCost[w] = 0;
+        //int pathCost = 0;
+        
+        for (int w: vertixIterable) {
+            ArrayDeque<Integer> q = new ArrayDeque<Integer>();
+            q.add(w);
 
-        while (!q.isEmpty()) {
-            w = q.remove();
-            pathCost = pathsCost[w] + 1;
-            for (int vertix: graph.adj(w)) {
-                if (marks[vertix]) {
-                    ancestor = vertix;
-                    path     =  pathsCost[vertix] + pathCost;
-                    return;
-                }
-                else {
-                    q.add(vertix);
-                    pathsCost[vertix] = pathCost;
+            while (!q.isEmpty()) {
+                w = q.remove();
+                for (int vertix: graph.adj(w)) {
+                    if (marksFirst[vertix]) {
+                        int newPath = pathsCost[vertix] + pathsCost[w] + 1;
+                        if (newPath < path) {
+                            ancestor = vertix;
+                            path     = newPath;
+                        } 
+                    }
+                    else {
+                        q.add(vertix);
+                        pathsCost[vertix] = Math.min(pathsCost[w] + 1, pathsCost[vertix]);
+                    }
                 }
             }
-        } 
+        }
+
     }
 
     private void validateData(int i) {
-        if (i < 0 || i > marks.length - 1) {
+        if (i < 0 || i > marksFirst.length - 1) {
             throw new java.lang.IndexOutOfBoundsException();
         }
     }
