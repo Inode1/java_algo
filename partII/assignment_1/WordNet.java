@@ -1,12 +1,14 @@
 import java.util.Vector;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.In;
 
 public class WordNet {
     private Digraph graph;
-    private HashMap<String, Integer> hashmap = new HashMap<String, Integer>();
-    private Vector<Vector<String>> nouns = new Vector<Vector<String>>();
+    private HashMap<String, Vector<Integer>> hashmap = new HashMap<String, Vector<Integer>>();
+    private HashMap<Integer, Vector<String>> nouns = new HashMap<Integer, Vector<String>>();
     private SAP sap;
     // constructor takes the name of the two input files
     public WordNet(String synsets, String hypernyms) {
@@ -16,11 +18,16 @@ public class WordNet {
             line = synsetFile.readLine();
             String[] array = line.split(",");
             int vertix = Integer.parseInt(array[0]);
-            nouns.add(new Vector<String>());
             String[] noun = array[1].split(" ");
             for (int i = 0; i < noun.length; ++i) {
-                hashmap.put(noun[i], vertix);
-                nouns.elementAt(vertix).add(noun[i]);
+                if (!hashmap.containsKey(noun[i])) {
+                    hashmap.put(noun[i], new Vector<Integer>());
+                }
+                if (!nouns.containsKey(vertix)) {
+                    nouns.put(vertix, new Vector<String>());
+                }
+                hashmap.get(noun[i]).add(vertix);
+                nouns.get(vertix).add(noun[i]);
             }
         }
        /* for (Vector<String> vec: nouns) {
@@ -45,10 +52,10 @@ public class WordNet {
     // returns all WordNet nouns
     public Iterable<String> nouns() {
         Vector<String> ret = new Vector<String>();
-        for (Vector<String> vec: nouns) {
-            for (String st: vec) {
-                ret.add(st);
-            }
+        Iterator it = hashmap.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            ret.add((String)pair.getKey());
         }
         return ret;
     }
@@ -58,13 +65,13 @@ public class WordNet {
         if (hashmap.get(word) == null) {
             return false;
         }
-        return false;
+        return true;
     }
 
     // distance between nounA and nounB (defined below)
     public int distance(String nounA, String nounB) {
-        Integer a = new Integer(hashmap.get(nounA));
-        Integer b = new Integer(hashmap.get(nounB));
+        Vector<Integer> a = hashmap.get(nounA);
+        Vector<Integer> b = hashmap.get(nounB);
         if (a == null || b == null) {
             throw new java.lang.IllegalArgumentException();
         }
@@ -74,7 +81,8 @@ public class WordNet {
     // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
     // in a shortest ancestral path (defined below)
     public String sap(String nounA, String nounB) {
-        return nouns.elementAt(distance(nounA, nounB)).elementAt(0);
+
+        return nouns.get(distance(nounA, nounB)).elementAt(0);
     }
 
     // do unit testing of this class
