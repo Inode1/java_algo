@@ -18,14 +18,15 @@ public class SAP {
         if (G == null) {
             throw new java.lang.NullPointerException();
         }
-        DirectedCycle cycle = new DirectedCycle(G);
+        graph = G;
+        /*DirectedCycle cycle = new DirectedCycle(G);
         if (cycle.hasCycle()) {
             throw new java.lang.IllegalArgumentException();
         }
         graph = new Digraph(G);
         if (!oneRoot()) {
             throw new java.lang.IllegalArgumentException();
-        }
+        }*/
         marks = new boolean[graph.V()];
         pathsCost = new int[graph.V()];
     }
@@ -65,7 +66,7 @@ public class SAP {
         path = Integer.MAX_VALUE;
         ancestor = Integer.MAX_VALUE;
         // check not empty
-        if (!vIterable.iterator().hasNext() || !wIterable.iterator().hasNext()) {
+        /*if (!vIterable.iterator().hasNext() || !wIterable.iterator().hasNext()) {
             return;
         }
         for (int i = 0; i < marks.length; ++i) {
@@ -110,9 +111,6 @@ public class SAP {
         while (!vertixDeque.isEmpty()) {
 
             activeVertix = vertixDeque.remove();
-            if (ancestor != Integer.MAX_VALUE && activeMark != marksDeque.getFirst()) {
-                return;
-            }
             activeMark  = marksDeque.remove();
             //System.out.println("remove: activeVertix: " + activeVertix + " activeMark: " + activeMark);    
 
@@ -126,17 +124,15 @@ public class SAP {
                                 //System.out.println("NonMark" + activePath);
                                 path = activePath;
                                 ancestor = w;
+                            }
+                            if (pathsCost[activeVertix] + 1 != pathsCost[w]) {
                                 continue;
                             }
                         }
+                        //if ()
                         marks[w]     = activeMark;
-                        if (pathsCost[w] == Integer.MAX_VALUE) {
-                            pathsCost[w] = pathsCost[activeVertix] + 1;
-                        }
-                        if (ancestor == Integer.MAX_VALUE) {
-                            vertixDeque.add(w);
-                        }
-                        
+                        pathsCost[w] = pathsCost[activeVertix] + 1;
+                        vertixDeque.add(w);                        
                         marksDeque.add(activeMark);
                         //System.out.println("Add: activeVertix: " + w + " activeMark: " + activeMark);
                     }
@@ -147,24 +143,22 @@ public class SAP {
                             //System.out.println("Mark" + activePath);
                             path = activePath;
                             ancestor = w;
+                        }
+                        //continue;
+                        if (pathsCost[activeVertix] + 1 != pathsCost[w]) {
                             continue;
                         }
                     }
-                    if (pathsCost[w] == Integer.MAX_VALUE) {
                         pathsCost[w] = pathsCost[activeVertix] + 1;
-                        if (ancestor == Integer.MAX_VALUE) {
-                            vertixDeque.add(w);
-                        }
+                        vertixDeque.add(w);
                         marksDeque.add(activeMark);
                         //System.out.println("Add: activeVertix: " + w + " activeMark: " + activeMark);
-                    }
-
                 }
             }
-        }
+        }*/
     }
 
-    private boolean oneRoot() {
+/*    private boolean oneRoot() {
         int state = 0;
         for (int i = 0; i < graph.V(); ++i) {
 
@@ -178,65 +172,12 @@ public class SAP {
             return false;
         }
         return true;
-    }
-/*
-    // depth first search from v
-    private void dfs() {
-        count++;
-        marked[v] = true;
-        for (int w : G.adj(v)) {
-            if (!marked[w]) {
-                dfs(G, w);
-            }
-        }
     }*/
 
-    private void bfsSearch(Iterable<Integer> vertixIterable) {
-        /*if (marks[w]) {
-            ancestor = w;
-            path     = pathsCost[w];
-            return;
-        }*/
-        for (int noCost: vertixIterable) {
-            if (marks[noCost]) {
-                if (pathsCost[noCost] < path) {
-                    ancestor = noCost;
-                    path     = pathsCost[noCost];
-                } 
-            }
-            pathsCost[noCost] = 0;            
-        }
-
-        //int pathCost = 0;
-        
-        for (int w: vertixIterable) {
-            ArrayDeque<Integer> q = new ArrayDeque<Integer>();
-            q.add(w);
-
-            while (!q.isEmpty()) {
-                w = q.remove();
-                for (int vertix: graph.adj(w)) {
-                    if (marks[vertix]) {
-                        int newPath = pathsCost[vertix] + pathsCost[w] + 1;
-                        if (newPath < path) {
-                            ancestor = vertix;
-                            path     = newPath;
-                        } 
-                    }
-                    else {
-                        q.add(vertix);
-                        pathsCost[vertix] = Math.min(pathsCost[w] + 1, pathsCost[vertix]);
-                    }
-                }
-            }
-        }
-
-    }
-
     private void validateData(int i) {
-        if (i < 0 || i > marks.length - 1) {
+/*        if (i < 0 || i > marks.length - 1) {
             throw new java.lang.IndexOutOfBoundsException();
-        }
+        }*/
     }
 
     // do unit testing of this class

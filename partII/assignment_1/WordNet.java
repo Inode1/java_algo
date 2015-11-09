@@ -12,7 +12,7 @@ public class WordNet {
     private SAP sap;
     // constructor takes the name of the two input files
     public WordNet(String synsets, String hypernyms) {
-        In synsetFile = new In(synsets);
+        /*In synsetFile = new In(synsets);
         String line;
         while (synsetFile.hasNextLine()) {
             line = synsetFile.readLine();
@@ -30,11 +30,6 @@ public class WordNet {
                 nouns.get(vertix).add(noun[i]);
             }
         }
-       /* for (Vector<String> vec: nouns) {
-            for (String st: vec) {
-                System.out.println(st);
-            }
-        }*/
         graph = new Digraph(nouns.size());
         In hypernymsFile = new In(hypernyms);
         while (hypernymsFile.hasNextLine()) {
@@ -45,7 +40,7 @@ public class WordNet {
                 graph.addEdge(first, Integer.parseInt(array[i]));
             }
         }
-        sap = new SAP(graph);
+        sap = new SAP(graph);*/
 
     }
 
