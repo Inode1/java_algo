@@ -139,6 +139,9 @@ public class SAP {
                                 }
                             }
                         }
+                        if (pathsCost[w] <= pathsCost[activeVertix] + 1) {
+                            continue;
+                        }
                         if (pathsCost[w] == Integer.MAX_VALUE) {
                             marks[w]     = activeMark;
                         }

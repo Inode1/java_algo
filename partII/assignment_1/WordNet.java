@@ -73,7 +73,7 @@ public class WordNet {
     // is the word a WordNet noun?
     public boolean isNoun(String word) {
         if (word == null) {
-            throw new java.lang.IllegalArgumentException();
+            throw new java.lang.NullPointerException();
         }
         if (hashmap.get(word) == null) {
             return false;
@@ -84,12 +84,12 @@ public class WordNet {
     // distance between nounA and nounB (defined below)
     public int distance(String nounA, String nounB) {
         if (nounA == null || nounB == null) {
-            throw new java.lang.IllegalArgumentException();
+            throw new java.lang.NullPointerException();
         }
         Vector<Integer> a = hashmap.get(nounA);
         Vector<Integer> b = hashmap.get(nounB);
         if (a == null || b == null) {
-            throw new java.lang.IllegalArgumentException();
+            throw new java.lang.NullPointerException();
         }
         return sap.length(hashmap.get(nounA), hashmap.get(nounB));
     }
