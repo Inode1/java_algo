@@ -2,14 +2,13 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.StdIn;
 import edu.princeton.cs.algs4.StdOut;
-import edu.princeton.cs.algs4.DirectedCycle;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Vector;
 
 public class SAP {
-    private Vector<Vector<Integer>> graph;
+    private ArrayList<Vector<Integer>> graph;
     private boolean[] marks;
     private int[] pathsCost;
     private int path;
@@ -20,36 +19,37 @@ public class SAP {
         if (G == null) {
             throw new java.lang.NullPointerException();
         }
-        System.out.println(G.V());
-        graph.setSize(G.V());
-
-        for (int i = 0; i < graph.size(); ++i) {
-            graph.insertElementAt(new Vector<Integer>(), i);
+        int state = 0;
+        //graph = (Vector<Integer>[]) new Object[G.V()];
+        graph = new ArrayList<Vector<Integer>>(G.V());
+        for (int i = 0; i < G.V(); ++i) {
+            Vector<Integer> temp = new Vector<Integer>();
             for (int vertix: G.adj(i)) {
-                graph.get(i).add(vertix);
+                temp.add(vertix);
             }
+            graph.add(temp);
         }
+        //System.out.println(pathsCost.length);
 
         /*DirectedCycle cycle = new DirectedCycle(G);
         if (cycle.hasCycle()) {
             throw new java.lang.IllegalArgumentException();
         }
-        graph = new Digraph(G);
-        if (!oneRoot()) {
-            throw new java.lang.IllegalArgumentException();
-        }*/
+        graph = new Digraph(G);*/
         marks = new boolean[graph.size()];
         pathsCost = new int[graph.size()];
+        
     }
 
     // length of shortest ancestral path between v and w; -1 if no such path
     public int length(int v, int w) {
+        //System.out.println(v);
+        //System.out.println(w);
         return length(Arrays.asList(v), Arrays.asList(w));
     }
 
     // a common ancestor of v and w that participates in a shortest ancestral path; -1 if no such path
     public int ancestor(int v, int w) {
-
         return ancestor(Arrays.asList(v), Arrays.asList(w));
     }
 
@@ -159,30 +159,17 @@ public class SAP {
                             }
                         }
                     }
-                        pathsCost[w] = pathsCost[activeVertix] + 1;
-                        vertixDeque.add(w);
-                        marksDeque.add(activeMark);
-                        //System.out.println("Add: activeVertix: " + w + " activeMark: " + activeMark);
+                    if (pathsCost[w] <= pathsCost[activeVertix] + 1) {
+                        continue;
+                    }
+                    pathsCost[w] = pathsCost[activeVertix] + 1;
+                    vertixDeque.add(w);
+                    marksDeque.add(activeMark);
+                    //System.out.println("Add: activeVertix: " + w + " activeMark: " + activeMark);
                 }
             }
         }
     }
-
-/*    private boolean oneRoot() {
-        int state = 0;
-        for (int i = 0; i < graph.V(); ++i) {
-
-            if (graph.outdegree(i) == 0 && graph.indegree(i) != 0) {
-                
-                //System.out.println(i);
-                ++state;
-            }
-        }
-        if (state > 1) {
-            return false;
-        }
-        return true;
-    }*/
 
     private void validateData(int i) {
         if (i < 0 || i > marks.length - 1) {

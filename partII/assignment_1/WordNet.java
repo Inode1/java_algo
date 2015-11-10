@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.Map;
 import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.DirectedCycle;
 
 public class WordNet {
     private Digraph graph;
@@ -12,7 +13,7 @@ public class WordNet {
     private SAP sap;
     // constructor takes the name of the two input files
     public WordNet(String synsets, String hypernyms) {
-        /*In synsetFile = new In(synsets);
+        In synsetFile = new In(synsets);
         String line;
         while (synsetFile.hasNextLine()) {
             line = synsetFile.readLine();
@@ -32,6 +33,7 @@ public class WordNet {
         }
         graph = new Digraph(nouns.size());
         In hypernymsFile = new In(hypernyms);
+        int state = 0;
         while (hypernymsFile.hasNextLine()) {
             line = hypernymsFile.readLine();
             String[] array = line.split(",");
@@ -40,7 +42,20 @@ public class WordNet {
                 graph.addEdge(first, Integer.parseInt(array[i]));
             }
         }
-        sap = new SAP(graph);*/
+        for (int i = 0; i < graph.V(); ++i) {
+            if (graph.outdegree(i) == 0 && graph.indegree(i) != 0) {
+                ++state;
+            }
+        }
+        if (state > 1) {
+            throw new java.lang.IllegalArgumentException();
+        }
+
+        DirectedCycle cycle = new DirectedCycle(graph);
+        if (cycle.hasCycle()) {
+            throw new java.lang.IllegalArgumentException();
+        }
+        sap = new SAP(graph);
 
     }
 
@@ -57,6 +72,9 @@ public class WordNet {
 
     // is the word a WordNet noun?
     public boolean isNoun(String word) {
+        if (word == null) {
+            throw new java.lang.IllegalArgumentException();
+        }
         if (hashmap.get(word) == null) {
             return false;
         }
@@ -65,6 +83,9 @@ public class WordNet {
 
     // distance between nounA and nounB (defined below)
     public int distance(String nounA, String nounB) {
+        if (nounA == null || nounB == null) {
+            throw new java.lang.IllegalArgumentException();
+        }
         Vector<Integer> a = hashmap.get(nounA);
         Vector<Integer> b = hashmap.get(nounB);
         if (a == null || b == null) {
@@ -76,7 +97,6 @@ public class WordNet {
     // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
     // in a shortest ancestral path (defined below)
     public String sap(String nounA, String nounB) {
-
         return nouns.get(distance(nounA, nounB)).elementAt(0);
     }
 
