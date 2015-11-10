@@ -4,10 +4,12 @@ import edu.princeton.cs.algs4.StdIn;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.DirectedCycle;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Vector;
 
 public class SAP {
-    private Digraph graph;
+    private Vector<Vector<Integer>> graph;
     private boolean[] marks;
     private int[] pathsCost;
     private int path;
@@ -18,7 +20,16 @@ public class SAP {
         if (G == null) {
             throw new java.lang.NullPointerException();
         }
-        graph = G;
+        System.out.println(G.V());
+        graph.setSize(G.V());
+
+        for (int i = 0; i < graph.size(); ++i) {
+            graph.insertElementAt(new Vector<Integer>(), i);
+            for (int vertix: G.adj(i)) {
+                graph.get(i).add(vertix);
+            }
+        }
+
         /*DirectedCycle cycle = new DirectedCycle(G);
         if (cycle.hasCycle()) {
             throw new java.lang.IllegalArgumentException();
@@ -27,8 +38,8 @@ public class SAP {
         if (!oneRoot()) {
             throw new java.lang.IllegalArgumentException();
         }*/
-        marks = new boolean[graph.V()];
-        pathsCost = new int[graph.V()];
+        marks = new boolean[graph.size()];
+        pathsCost = new int[graph.size()];
     }
 
     // length of shortest ancestral path between v and w; -1 if no such path
@@ -66,7 +77,7 @@ public class SAP {
         path = Integer.MAX_VALUE;
         ancestor = Integer.MAX_VALUE;
         // check not empty
-        /*if (!vIterable.iterator().hasNext() || !wIterable.iterator().hasNext()) {
+        if (!vIterable.iterator().hasNext() || !wIterable.iterator().hasNext()) {
             return;
         }
         for (int i = 0; i < marks.length; ++i) {
@@ -114,8 +125,7 @@ public class SAP {
             activeMark  = marksDeque.remove();
             //System.out.println("remove: activeVertix: " + activeVertix + " activeMark: " + activeMark);    
 
-
-            for (int w: graph.adj(activeVertix)) {
+            for (int w: graph.get(activeVertix)) {
                 activePath = pathsCost[w] + pathsCost[activeVertix] + 1;
                 if (activeMark) {
                     if (!marks[w]) {
@@ -124,13 +134,14 @@ public class SAP {
                                 //System.out.println("NonMark" + activePath);
                                 path = activePath;
                                 ancestor = w;
-                            }
-                            if (pathsCost[activeVertix] + 1 != pathsCost[w]) {
-                                continue;
+                                if (pathsCost[w] == 0) {
+                                    return;
+                                }
                             }
                         }
-                        //if ()
-                        marks[w]     = activeMark;
+                        if (pathsCost[w] == Integer.MAX_VALUE) {
+                            marks[w]     = activeMark;
+                        }
                         pathsCost[w] = pathsCost[activeVertix] + 1;
                         vertixDeque.add(w);                        
                         marksDeque.add(activeMark);
@@ -143,10 +154,9 @@ public class SAP {
                             //System.out.println("Mark" + activePath);
                             path = activePath;
                             ancestor = w;
-                        }
-                        //continue;
-                        if (pathsCost[activeVertix] + 1 != pathsCost[w]) {
-                            continue;
+                            if (pathsCost[w] == 0) {
+                                return;
+                            }
                         }
                     }
                         pathsCost[w] = pathsCost[activeVertix] + 1;
@@ -155,7 +165,7 @@ public class SAP {
                         //System.out.println("Add: activeVertix: " + w + " activeMark: " + activeMark);
                 }
             }
-        }*/
+        }
     }
 
 /*    private boolean oneRoot() {
@@ -175,9 +185,9 @@ public class SAP {
     }*/
 
     private void validateData(int i) {
-/*        if (i < 0 || i > marks.length - 1) {
+        if (i < 0 || i > marks.length - 1) {
             throw new java.lang.IndexOutOfBoundsException();
-        }*/
+        }
     }
 
     // do unit testing of this class
