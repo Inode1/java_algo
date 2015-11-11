@@ -115,7 +115,7 @@ public class WordNet {
         {
             ancestor = sap.ancestor(a, b);
         }
-        String result = new String();
+        String result = null;
         int iteration = 0;
         for (String noun: nouns.get(ancestor)) {
             if (iteration == 0) {

@@ -15,7 +15,7 @@ public class SAP {
     private int[] pathsCost;
     private int path;
     private int ancestor;
-    private HashMap<Integer, HashMap<Integer, Cache>> cache;
+    private HashMap<String, HashMap<String, Cache>> cache;
     private ArrayDeque<Integer> needReset = new ArrayDeque<Integer>();
     // constructor takes a digraph (not necessarily a DAG)
     private class Cache {
@@ -47,7 +47,7 @@ public class SAP {
             throw new java.lang.IllegalArgumentException();
         }
         graph = new Digraph(G);*/
-        cache = new HashMap<Integer, HashMap<Integer, Cache>>(graph.size());
+        cache = new HashMap<String, HashMap<String, Cache>>(graph.size());
         marks = new boolean[graph.size()];
         nonMarks = new boolean[graph.size()];
         pathsCost = new int[graph.size()];
@@ -95,37 +95,55 @@ public class SAP {
 
     // length of shortest ancestral path betMath.ween any vertex in v and any vertex in w; -1 if no such path
     public int length(Iterable<Integer> v, Iterable<Integer> w) {
-        //bfsMark(v);
+        Cache temp = checkCache(v, w); 
+        if (temp != null) {
+            return temp.distance;
+        }
         asyncSearch(v, w);
         if (path == Integer.MAX_VALUE) {
-            return -1;
+            path = -1;
         }
+        if (ancestor == Integer.MAX_VALUE) {
+            ancestor = -1;
+        }
+        setCache(v, w, new Cache(path, ancestor));
         return path;
     }
 
     // a common ancestor that participates in shortest ancestral path; -1 if no such path
     public int ancestor(Iterable<Integer> v, Iterable<Integer> w) {
-        //bfsMark(v);
-        asyncSearch(v, w);
-        if (ancestor == Integer.MAX_VALUE) {
-            return -1;
+        Cache temp = checkCache(v, w); 
+        if (temp != null) {
+            return temp.ancestor;
         }
+        asyncSearch(v, w);
+        if (path == Integer.MAX_VALUE) {
+            path = -1;
+        }
+        if (ancestor == Integer.MAX_VALUE) {
+            ancestor = -1;
+        }
+        setCache(v, w, new Cache(path, ancestor));
         return ancestor;
     }
 
     private Cache checkCache(int v, int w) {
+        if (v == w) {
+            return new Cache(0, w);
+        }
         int min = v;
         if (w < v) {
             min = w;
             w = v;
         }
-        if (cache.containsKey(min)) {
-            Cache temp = cache.get(min).get(w);
+        if (cache.containsKey(Integer.toString(min))) {
+            Cache temp = cache.get(Integer.toString(min)).get(Integer.toString(w));
             if (temp != null) {
+                //System.out.println("Cache");
                 return temp;
             }
         } else {
-            cache.put(min, new HashMap<Integer, Cache>());            
+            cache.put(Integer.toString(min), new HashMap<String, Cache>());            
         }
         return null;
     }
@@ -136,7 +154,53 @@ public class SAP {
             min = w;
             w   = v;
         }
-        cache.get(min).put(w, data);
+        cache.get(Integer.toString(min)).put(Integer.toString(w), data);
+    }
+
+    private Cache checkCache(Iterable<Integer> v, Iterable<Integer> w) {
+        String first = null;
+        String second = null;
+        for (int num: v) {
+            first += Integer.toString(num) + " ";
+        }
+        for (int num: w) {
+            second += Integer.toString(num) + " ";
+        }
+        
+        if (first.compareTo(second) > 0) {
+            String temp = first;
+            first = second;
+            second = first;
+        } 
+
+        if (cache.containsKey(first)) {
+            Cache temp = cache.get(first).get(second);
+            if (temp != null) {
+                //System.out.println("Cache");
+                return temp;
+            }
+        } else {
+            cache.put(first, new HashMap<String, Cache>());            
+        }
+        return null;
+    }
+
+    private void setCache(Iterable<Integer> v, Iterable<Integer> w, Cache data) {
+        String first = null;
+        String second = null;
+        for (int num: v) {
+            first += Integer.toString(num) + " ";
+        }
+        for (int num: w) {
+            second += Integer.toString(num) + " ";
+        }
+        
+        if (first.compareTo(second) > 0) {
+            String temp = first;
+            first = second;
+            second = first;
+        }
+        cache.get(first).put(second, data);
     }
 
     private void asyncSearch(Iterable<Integer> vIterable, Iterable<Integer> wIterable) {
