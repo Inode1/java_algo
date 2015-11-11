@@ -64,8 +64,8 @@ public class WordNet {
         Vector<String> ret = new Vector<String>();
         Iterator it = hashmap.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry)it.next();
-            ret.add((String)pair.getKey());
+            Map.Entry pair = (Map.Entry) it.next();
+            ret.add((String) pair.getKey());
         }
         return ret;
     }
@@ -89,19 +89,57 @@ public class WordNet {
         Vector<Integer> a = hashmap.get(nounA);
         Vector<Integer> b = hashmap.get(nounB);
         if (a == null || b == null) {
-            throw new java.lang.NullPointerException();
+            throw new java.lang.IllegalArgumentException();
         }
-        return sap.length(hashmap.get(nounA), hashmap.get(nounB));
+        if (a.size() == 1 && b.size() == 1) {
+            return sap.length(a.elementAt(0), b.elementAt(0));
+        }
+        return sap.length(a, b);
     }
 
     // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
     // in a shortest ancestral path (defined below)
     public String sap(String nounA, String nounB) {
-        return nouns.get(distance(nounA, nounB)).elementAt(0);
+        if (nounA == null || nounB == null) {
+            throw new java.lang.NullPointerException();
+        }
+        Vector<Integer> a = hashmap.get(nounA);
+        Vector<Integer> b = hashmap.get(nounB);
+        if (a == null || b == null) {
+            throw new java.lang.IllegalArgumentException();
+        }
+        int ancestor = 0;
+        if (a.size() == 1 && b.size() == 1) {
+            ancestor = sap.ancestor(a.elementAt(0), b.elementAt(0));
+        } else
+        {
+            ancestor = sap.ancestor(a, b);
+        }
+        String result = new String();
+        int iteration = 0;
+        for (String noun: nouns.get(ancestor)) {
+            if (iteration == 0) {
+                result = noun;
+                ++iteration;
+            } else
+            {
+                result = result + " " + noun; 
+            }
+        }
+        return result;
     }
 
     // do unit testing of this class
     public static void main(String[] args) {
-        WordNet word = new WordNet(args[0], args[1]);
+        //WordNet word = new WordNet(args[0], args[1]);
+        /*while (!StdIn.isEmpty()) {
+            String v = StdIn.readString();
+            String w = StdIn.readString();
+            Iterable<String> sap = word.sap(v, w);
+            int dist = word.distance(v, w);
+            for (String res: sap) {
+            StdOut.printf("Sap = %s\n", res);
+            }
+        }*/
     }
 }
