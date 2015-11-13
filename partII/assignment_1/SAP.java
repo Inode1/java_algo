@@ -9,7 +9,12 @@ import java.util.Vector;
 import java.util.HashMap;
 
 public class SAP {
-    private ArrayList<Vector<Integer>> graph;
+    //private ArrayList<Vector<Integer>> graph;
+
+    private int[] graphVertixArray;
+    private int[] graphEdgesArray;
+    private ArrayDeque<Integer> deque;
+
     private boolean[] marks;
     private boolean[] nonMarks;
     private int[] pathsCost;
@@ -61,21 +66,35 @@ public class SAP {
         }
         int state = 0;
         //graph = (Vector<Integer>[]) new Object[G.V()];
-        graph = new ArrayList<Vector<Integer>>(G.V());
-        for (int i = 0; i < G.V(); ++i) {
-            Vector<Integer> temp = new Vector<Integer>();
-            for (int vertix: G.adj(i)) {
-                temp.add(vertix);
+        graphVertixArray = new int[G.V()];
+        graphEdgesArray = new int[G.E()];
+        int totalEdgeSize = 0;
+        for (int v = 0, e = 0; v < G.V(); ++v) {
+            graphVertixArray[v] = totalEdgeSize;
+            for (int edge: G.adj(v)) {
+                graphEdgesArray[e] = edge; 
+                ++e;
             }
-            graph.add(temp);
+            totalEdgeSize += G.outdegree(v); 
         }
-        marks = new boolean[graph.size()];
-        nonMarks = new boolean[graph.size()];
-        pathsCost = new int[graph.size()];
-        for (int i = 0; i < pathsCost.length; ++i) {
+        marks = new boolean[G.V()];
+        nonMarks = new boolean[G.V()];
+        pathsCost = new int[G.V()];
+        ArrayDeque<Integer> deque = new ArrayDeque<Integer>(G.V());
+/*        for (int i = 0; i < pathsCost.length; ++i) {
             pathsCost[i] = Integer.MAX_VALUE;
+        }      */  
+    }
+
+    private int[] getEdges(int vertixPosition) {
+        int to = 0;
+        // last element to == total size
+        if (vertixPosition == graphVertixArray.length - 1) {
+            to = graphEdgesArray.length; 
+        } else {
+            to = graphVertixArray[vertixPosition + 1];
         }
-        
+        return Arrays.copyOfRange(graphEdgesArray, graphVertixArray[vertixPosition], to);
     }
 
     // length of shortest ancestral path between v and w; -1 if no such path
@@ -162,9 +181,61 @@ public class SAP {
     }
 
     private void asyncSearch(Iterable<Integer> vIterable, Iterable<Integer> wIterable) {
+        // preinit
         path = Integer.MAX_VALUE;
         ancestor = Integer.MAX_VALUE;
+
+        for (int i: needReset) {
+            marks[i] = false;
+            nonMarks[i] = false;
+        }
+        needReset.clear();
+        int bestLength = 1;
+        int elementInDeque = 0;
         
+        // input marks vertix
+        for (int noCost: vIterable) {
+            validateData(noCost);
+            marks[noCost] = true;
+            pathsCost[noCost] = 0;
+            needReset.add(noCost);
+            deque.add(noCost);
+        }
+        // input marks vertix 
+        for (int noCost: wIterable) {
+            if (marks[noCost]) {
+                path = 0;
+                ancestor = noCost;
+                return;
+            }
+            validateData(noCost);
+            nonMarks[noCost] = true;
+            pathsCost[noCost] = 0;
+            needReset.add(noCost);
+            deque.add(noCost);
+        }
+        elementInDeque = deque.size();
+        int activeElement = 0;
+        while (!deque.isEmpty()) {
+            activeElement = deque.remove();
+            --elementInDeque;
+            if (elementInDeque == 0) {
+                ++bestLength;
+                elementInDeque = deque.size();
+            }
+
+            for (int w: getEdges(activeVertix)) {
+                if ()
+            }
+
+
+
+        }
+
+
+/*        path = Integer.MAX_VALUE;
+        ancestor = Integer.MAX_VALUE;
+
         for (int i: needReset) {
             marks[i] = false;
             nonMarks[i] = false;
@@ -215,7 +286,7 @@ public class SAP {
             activeMark  = marksDeque.remove();
             //System.out.println("remove: activeVertix: " + activeVertix + " activeMark: " + activeMark);    
 
-            for (int w: graph.get(activeVertix)) {
+            for (int w: getEdges(activeVertix)) {
                 activePath = pathsCost[w] + pathsCost[activeVertix] + 1;
                 if (activeMark) {
                     if (!marks[w]) {
@@ -274,7 +345,7 @@ public class SAP {
                     //System.out.println("Add: activeVertix: " + w + " activeMark: " + activeMark);
                 }
             }
-        }
+        }*/
     }
 
     private void validateData(int i) {
@@ -301,6 +372,9 @@ public class SAP {
             int w = StdIn.readInt();*/
             int length   = sap.length(1, 5);
             int ancestor = sap.ancestor(5, 1);
+            StdOut.printf("length = %d, ancestor = %d\n", length, ancestor);
+            length   = sap.length(2, 5);
+            ancestor = sap.ancestor(2, 1);
             StdOut.printf("length = %d, ancestor = %d\n", length, ancestor);
     }
 
