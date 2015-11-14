@@ -80,10 +80,7 @@ public class SAP {
         marks = new boolean[G.V()];
         nonMarks = new boolean[G.V()];
         pathsCost = new int[G.V()];
-        ArrayDeque<Integer> deque = new ArrayDeque<Integer>(G.V());
-/*        for (int i = 0; i < pathsCost.length; ++i) {
-            pathsCost[i] = Integer.MAX_VALUE;
-        }      */  
+        deque = new ArrayDeque<Integer>(G.V());
     }
 
     private int[] getEdges(int vertixPosition) {
@@ -117,39 +114,39 @@ public class SAP {
 
     // length of shortest ancestral path betMath.ween any vertex in v and any vertex in w; -1 if no such path
     public int length(Iterable<Integer> v, Iterable<Integer> w) {
-        //HashData first = new HashData(v);
-        //HashData second = new HashData(w);
-        //Cache temp = checkCache(first, second); 
-        //if (temp != null) {
-        //   return temp.distance;
-        //}
+        HashData first = new HashData(v);
+        HashData second = new HashData(w);
+        Cache temp = checkCache(first, second); 
+        if (temp != null) {
+           return temp.distance;
+        }
         asyncSearch(v, w);
         if (path == Integer.MAX_VALUE) {
             path = -1;
         }
-        //if (ancestor == Integer.MAX_VALUE) {
-        //    ancestor = -1;
-        //}
-        //setCache(first, second, new Cache(path, ancestor));
+        if (ancestor == Integer.MAX_VALUE) {
+            ancestor = -1;
+        }
+        setCache(first, second, new Cache(path, ancestor));
         return path;
     }
 
     // a common ancestor that participates in shortest ancestral path; -1 if no such path
     public int ancestor(Iterable<Integer> v, Iterable<Integer> w) {
-        //HashData first = new HashData(v);
-        //HashData second = new HashData(w);
-        //Cache temp = checkCache(first, second); 
-        //if (temp != null) {
-        //    return temp.ancestor;
-        //}
+        HashData first = new HashData(v);
+        HashData second = new HashData(w);
+        Cache temp = checkCache(first, second); 
+        if (temp != null) {
+            return temp.ancestor;
+        }
         asyncSearch(v, w);
-        //if (path == Integer.MAX_VALUE) {
-        //    path = -1;
-        //}
+        if (path == Integer.MAX_VALUE) {
+            path = -1;
+        }
         if (ancestor == Integer.MAX_VALUE) {
             ancestor = -1;
         }
-        //setCache(first, second, new Cache(path, ancestor));
+        setCache(first, second, new Cache(path, ancestor));
         return ancestor;
     }
 
@@ -184,15 +181,15 @@ public class SAP {
         // preinit
         path = Integer.MAX_VALUE;
         ancestor = Integer.MAX_VALUE;
-
+        deque.clear();
         for (int i: needReset) {
             marks[i] = false;
             nonMarks[i] = false;
         }
+
         needReset.clear();
         int bestLength = 1;
         int elementInDeque = 0;
-        
         // input marks vertix
         for (int noCost: vIterable) {
             validateData(noCost);
@@ -217,136 +214,208 @@ public class SAP {
         elementInDeque = deque.size();
         int activeElement = 0;
         while (!deque.isEmpty()) {
-            activeElement = deque.remove();
-            --elementInDeque;
             if (elementInDeque == 0) {
+                // check best
                 ++bestLength;
+                //System.out.println("Change");
                 elementInDeque = deque.size();
             }
-
-            for (int w: getEdges(activeVertix)) {
-                if ()
-            }
-
-
-
-        }
-
-
-/*        path = Integer.MAX_VALUE;
-        ancestor = Integer.MAX_VALUE;
-
-        for (int i: needReset) {
-            marks[i] = false;
-            nonMarks[i] = false;
-            pathsCost[i] = Integer.MAX_VALUE;
-        }
-        needReset.clear();
-
-        // deque for first vertix
-        ArrayDeque<Boolean> marksDeque = new ArrayDeque<Boolean>();
-        ArrayDeque<Integer> vertixDeque = new ArrayDeque<Integer>();
-        for (int noCost: vIterable) {
-            validateData(noCost);
-            if (!marks[noCost]) {
-                marks[noCost] = true;
-                vertixDeque.add(noCost);
-                marksDeque.add(true);
-                pathsCost[noCost] = 0;
-                needReset.add(noCost);
-                //System.out.println("Add: activeVertix: " + noCost + " activeMark: " + true);
-            }
-        }
-
-        for (int noCost: wIterable) {
-            validateData(noCost);
-            if (marks[noCost]) {
-                path = 0;
-                ancestor = noCost;
+            if (path <= bestLength) {
                 return;
             }
-            // we previous get this element
-            // no need put in deque
-            if (pathsCost[noCost] != 0) {
-                pathsCost[noCost] = 0;
-                nonMarks[noCost] = true; 
-                vertixDeque.add(noCost);
-                marksDeque.add(false);
-                needReset.add(noCost);
-                //System.out.println("Add: activeVertix: " + noCost + " activeMark: " + false);
+            activeElement = deque.remove();
+            --elementInDeque;
+
+/*            System.out.println("Next verix is active for: " + activeElement);
+            for (int w: getEdges(activeElement)) {
+                System.out.println(w);
             }
-        }
+            System.out.println("End");*/
 
-        boolean activeMark = true;
-        int     activeVertix; 
-        int     activePath;
-        while (!vertixDeque.isEmpty()) {
-
-            activeVertix = vertixDeque.remove();
-            activeMark  = marksDeque.remove();
-            //System.out.println("remove: activeVertix: " + activeVertix + " activeMark: " + activeMark);    
-
-            for (int w: getEdges(activeVertix)) {
-                activePath = pathsCost[w] + pathsCost[activeVertix] + 1;
-                if (activeMark) {
-                    if (!marks[w]) {
-                        if (nonMarks[w] && activePath < path) {
-                            //System.out.println("NonMark" + activePath);
-                            path = activePath;
-                            ancestor = w;
-                            if (pathsCost[w] == 0) {
-                                return;
-                            }
-                        }
-                        if (pathsCost[w] <= pathsCost[activeVertix] + 1) {
-                            //System.out.println("Continue" + activePath);
-                            continue;
-                        }
-                        marks[w]     = activeMark;
-                        pathsCost[w] = pathsCost[activeVertix] + 1;
-                        vertixDeque.add(w);
-                        needReset.add(w);                        
-                        marksDeque.add(activeMark);
-                        //System.out.println("Add: activeVertix: " + w + " activeMark: " + activeMark);
-                    } else {
-                        if (pathsCost[w] > pathsCost[activeVertix] + 1) {
-                            pathsCost[w] = pathsCost[activeVertix] + 1;
-                            vertixDeque.add(w);
+            for (int w: getEdges(activeElement)) {
+                int distance = bestLength + pathsCost[w];
+                //System.out.println(pathsCost[activeElement] + " "+ bestLength + " vertix: " + activeElement);
+                if (marks[activeElement] && nonMarks[activeElement]) {
+                    if (marks[w] != nonMarks[w]) {
+                        nonMarks[w] = true;
+                        marks[w] = true;
+                        if (pathsCost[w] > bestLength) {
+                            //System.out.println("Change1: " + bestLength + " vertix: " + w);
+                            pathsCost[w] = bestLength;
                             needReset.add(w);
-                            marksDeque.add(activeMark);       
+                            deque.add(w);
                         }
+                        if (bestLength + pathsCost[w] < path) {
+                            path = bestLength + pathsCost[w];
+                            ancestor = w; 
+                        }
+                    } else if (!marks[w] && !nonMarks[w]) {
+                        nonMarks[w] = true;
+                        marks[w] = true;              
+                        //System.out.println("Change2: " + bestLength + " vertix: " + w);                  
+                        pathsCost[w] = bestLength;
+                        needReset.add(w);
+                        deque.add(w);
                     }
-
                 } else {
-                    if (!nonMarks[w]) {
-                        if (marks[w]) {
-                            if (activePath < path) {
-                                //System.out.println("Mark" + activePath);
-                                path = activePath;
-                                ancestor = w;
-                                if (pathsCost[w] == 0) {
-                                    return;
+                    if (marks[w] != nonMarks[w]) {
+                        if (marks[w] && nonMarks[activeElement]
+                            || nonMarks[w] && marks[activeElement]) {
+                            if (marks[w] != nonMarks[w]) {
+                                nonMarks[w] = true;
+                                marks[w] = true;
+                                if (pathsCost[w] > bestLength) {
+                                    //System.out.println("Change3: " + bestLength + " path: " + pathsCost[w] + " vertix: " + w);
+                                    pathsCost[w] = bestLength;
+                                    needReset.add(w);
+                                    deque.add(w);
+                                }
+                                if (bestLength + pathsCost[w] < path) {
+                                    path = bestLength + pathsCost[w];
+                                    ancestor = w; 
                                 }
                             }
                         }
-                        nonMarks[w] = true;
-                        pathsCost[w] = pathsCost[activeVertix] + 1;
-                        vertixDeque.add(w);
-                        needReset.add(w);
-                        marksDeque.add(activeMark);
-                    } else {
-                        if (pathsCost[w] > pathsCost[activeVertix] + 1) {
-                            pathsCost[w] = pathsCost[activeVertix] + 1;
-                            vertixDeque.add(w);
-                            needReset.add(w);
-                            marksDeque.add(activeMark);       
+                    } else if (!marks[w] && !nonMarks[w]) {
+                        if (marks[activeElement]) {
+                            marks[w] = true;
+                        } else {
+                            nonMarks[w] = true;
                         }
-                    }
-                    //System.out.println("Add: activeVertix: " + w + " activeMark: " + activeMark);
+                        //System.out.println("Change4: " + bestLength + " vertix: " + w);
+                        pathsCost[w] = bestLength;
+                        needReset.add(w);
+                        deque.add(w);
+                    }                 
                 }
             }
-        }*/
+        }
     }
+
+/*                for (int w: getEdges(activeElement)) {
+                int distance = pathsCost[activeElement] + 1 + pathsCost[w];
+                if (marks[activeElement] && nonMarks[activeElement]) {
+                    nonMarks[w] = true;
+                    marks[w] = true;
+                    if (marks[w] != nonMarks[w]) {
+                        if (distance < path) {
+                            path = distance;
+                            ancestor = w; 
+                        }
+                        if (pathsCost[w] != bestLength) {
+                            pathsCost[w] = bestLength;
+                            needReset.add(w);
+                            deque.add(w);
+                        }
+                    } else if (!marks[w] && !nonMarks[w]) {
+                        pathsCost[w] = bestLength;
+                        needReset.add(w);
+                        deque.add(w);
+                    }
+                } else {
+                    if (marks[w] != nonMarks[w]) {
+                        if (marks[w] && nonMarks[activeElement]
+                            || nonMarks[w] && marks[activeElement]) {
+                            nonMarks[w] = true;
+                            marks[w] = true;
+                            if (marks[w] != nonMarks[w]) {
+                                if (distance < path) {
+                                    path = distance;
+                                    ancestor = w; 
+                                }
+                                if (pathsCost[w] != bestLength) {
+                                    pathsCost[w] = bestLength;
+                                    needReset.add(w);
+                                    deque.add(w);
+                                }
+                            }
+                        }
+                    } else if (!marks[w] && !nonMarks[w]) {
+                        if (marks[activeElement]) {
+                            marks[w] = true;
+                        } else {
+                            nonMarks[w] = true;
+                        }
+                        pathsCost[w] = bestLength;
+                        needReset.add(w);
+                        deque.add(w);
+                    } 
+                }
+            }*/
+
+
+
+            /*                int distance = pathsCost[activeElement] + 1 + pathsCost[w];
+                if (marks[activeElement] && nonMarks[activeElement]) {
+                    if (marks[w] && nonMarks[w]) {
+                    } else if (marks[w] || nonMarks[w]) {
+                        nonMarks[w] = true;
+                        marks[w] = true;
+                        if (distance < path) {
+                            path = distance;
+                            ancestor = w; 
+                        }
+                        if (pathsCost[w] == bestLength) {
+                        } else {
+                            pathsCost[w] = bestLength;
+                            needReset.add(w);
+                            deque.add(w);
+                        }
+                    } else {
+                        nonMarks[w] = true;
+                        marks[w] = true;
+                        pathsCost[w] = bestLength;
+                        needReset.add(w);
+                        deque.add(w);
+                    }
+                } else {
+                    if (marks[w] && nonMarks[w]) {
+                    } else if (marks[w] || nonMarks[w]) {
+                        if (marks[w]) {
+                            if (marks[activeElement]) {
+                            } else {
+                                nonMarks[w] = true;
+                                marks[w] = true;
+                                if (distance < path) {
+                                    path = distance;
+                                    ancestor = w; 
+                                }
+                                if (pathsCost[w] == bestLength) {
+                                    //System.out.println("ewfwef4");
+                                } else {
+                                    pathsCost[w] = bestLength;
+                                    needReset.add(w);
+                                    deque.add(w);
+                                }
+                            }
+                        } else {
+                            if (marks[activeElement]) {
+                                nonMarks[w] = true;
+                                marks[w] = true;
+                                if (distance < path) {
+                                    path = distance;
+                                    ancestor = w; 
+                                }
+                                if (pathsCost[w] == bestLength) {
+                                } else {
+                                    pathsCost[w] = bestLength;
+                                    needReset.add(w);
+                                    deque.add(w);
+                                }
+                            } else {
+                            }
+                        }
+                    } else {
+                        if (marks[activeElement]) {
+                            marks[w] = true;
+                        } else {
+                            nonMarks[w] = true;
+                        }
+                        pathsCost[w] = bestLength;
+                        needReset.add(w);
+                        deque.add(w);
+                    }
+                }*/
 
     private void validateData(int i) {
         if (i < 0 || i > marks.length - 1) {
@@ -360,22 +429,26 @@ public class SAP {
         Digraph G = new Digraph(in);
         SAP sap = new SAP(G);
         ArrayList<Integer> first = new ArrayList<Integer>();
-        first.add(1);
-        first.add(2);
-        first.add(3);
+        first.add(12002);
+        first.add(55025);
+        //first.add(2);
+        //first.add(3);
         ArrayList<Integer> second = new ArrayList<Integer>();
-        second.add(4);
-        second.add(5);
-        second.add(6);
+        second.add(55854);
+        second.add(82187);
+        //second.add(6);
         //while (!StdIn.isEmpty()) {
-/*              int v = StdIn.readInt();
-            int w = StdIn.readInt();*/
-            int length   = sap.length(1, 5);
-            int ancestor = sap.ancestor(5, 1);
+            //int v = StdIn.readInt();
+            //int w = StdIn.readInt();
+            int length   = sap.length(first, second);
+            int ancestor = sap.ancestor(first, second);
+            //int length   = sap.length(v, w);
+            //int ancestor = sap.ancestor(v, w);
             StdOut.printf("length = %d, ancestor = %d\n", length, ancestor);
-            length   = sap.length(2, 5);
-            ancestor = sap.ancestor(2, 1);
-            StdOut.printf("length = %d, ancestor = %d\n", length, ancestor);
+            //length   = sap.length(2, 5);
+            //ancestor = sap.ancestor(2, 1);
+            //StdOut.printf("length = %d, ancestor = %d\n", length, ancestor);
+        //}
     }
 
 }
