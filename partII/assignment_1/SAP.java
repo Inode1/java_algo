@@ -13,7 +13,8 @@ public class SAP {
 
     private int[] graphVertixArray;
     private int[] graphEdgesArray;
-    private ArrayDeque<Integer> deque;
+    private ArrayDeque<Integer> vertixDeque;
+    private ArrayDeque<Boolean> marksDeque;
 
     private boolean[] marks;
     private boolean[] nonMarks;
@@ -80,7 +81,8 @@ public class SAP {
         marks = new boolean[G.V()];
         nonMarks = new boolean[G.V()];
         pathsCost = new int[G.V()];
-        deque = new ArrayDeque<Integer>(G.V());
+        vertixDeque = new ArrayDeque<Integer>(G.V());
+        marksDeque = new ArrayDeque<Boolean>(G.V());
     }
 
     private int[] getEdges(int vertixPosition) {
@@ -176,8 +178,117 @@ public class SAP {
         }       
         cache.get(v).put(w, data);
     }
-
     private void asyncSearch(Iterable<Integer> vIterable, Iterable<Integer> wIterable) {
+        path = Integer.MAX_VALUE;
+        ancestor = Integer.MAX_VALUE;
+        
+        for (int i: needReset) {
+            marks[i] = false;
+            nonMarks[i] = false;
+        }
+        needReset.clear();
+
+        // deque for first vertix
+        marksDeque.clear();
+        vertixDeque.clear();
+        for (int noCost: vIterable) {
+            validateData(noCost);
+            if (!marks[noCost]) {
+                marks[noCost] = true;
+                vertixDeque.add(noCost);
+                marksDeque.add(true);
+                pathsCost[noCost] = 0;
+                needReset.add(noCost);
+                //System.out.println("Add: activeVertix: " + noCost + " activeMark: " + true);
+            }
+        }
+
+        for (int noCost: wIterable) {
+            validateData(noCost);
+            if (marks[noCost]) {
+                path = 0;
+                ancestor = noCost;
+                return;
+            }
+            // we previous get this element
+            // no need put in deque
+            pathsCost[noCost] = 0;
+            nonMarks[noCost] = true; 
+            vertixDeque.add(noCost);
+            marksDeque.add(false);
+            needReset.add(noCost);
+                //System.out.println("Add: activeVertix: " + noCost + " activeMark: " + false);
+        }
+
+        boolean activeMark = true;
+        int     activeVertix; 
+        int     activePath;
+        int elementInDeque = vertixDeque.size();
+        int bestLength = 1;
+        while (!vertixDeque.isEmpty()) {
+            if (elementInDeque == 0) {
+                // check best
+                ++bestLength;
+                //System.out.println("Change");
+                elementInDeque = vertixDeque.size();
+            }
+            if (path <= bestLength) {
+                return;
+            }
+            --elementInDeque;
+            activeVertix = vertixDeque.remove();
+            activeMark  = marksDeque.remove();
+            //System.out.println("remove: activeVertix: " + activeVertix + " activeMark: " + activeMark);    
+
+            for (int w: getEdges(activeVertix)) {
+                activePath = pathsCost[w] + bestLength;
+                if (activeMark) {
+                    if (!marks[w]) {
+                        if (nonMarks[w] && activePath < path) {
+                            //System.out.println("NonMark" + activePath);
+                            path = activePath;
+                            ancestor = w;
+                            if (pathsCost[w] == 0) {
+                                return;
+                            }
+                        }
+                        if (nonMarks[w] && pathsCost[w] <= bestLength) {
+                            //System.out.println("Continue" + activePath);
+                            continue;
+                        }
+                        marks[w]     = activeMark;
+                        pathsCost[w] = bestLength;
+                        vertixDeque.add(w);
+                        needReset.add(w);                        
+                        marksDeque.add(activeMark);
+                        //System.out.println("Add: activeVertix: " + w + " activeMark: " + activeMark);
+                    }
+                } else {
+                    if (!nonMarks[w]) {
+                        if (marks[w]) {
+                            if (activePath < path) {
+                                //System.out.println("Mark" + activePath);
+                                path = activePath;
+                                ancestor = w;
+                                if (pathsCost[w] == 0) {
+                                    return;
+                                }
+                            }
+                        }
+                        nonMarks[w] = true;
+                        pathsCost[w] = bestLength;
+                        vertixDeque.add(w);
+                        needReset.add(w);
+                        marksDeque.add(activeMark);
+                    }
+                    //System.out.println("Add: activeVertix: " + w + " activeMark: " + activeMark);
+                }
+            }
+        }
+    }
+
+
+/*    private void asyncSearch(Iterable<Integer> vIterable, Iterable<Integer> wIterable) {
         // preinit
         path = Integer.MAX_VALUE;
         ancestor = Integer.MAX_VALUE;
@@ -226,12 +337,6 @@ public class SAP {
             activeElement = deque.remove();
             --elementInDeque;
 
-/*            System.out.println("Next verix is active for: " + activeElement);
-            for (int w: getEdges(activeElement)) {
-                System.out.println(w);
-            }
-            System.out.println("End");*/
-
             for (int w: getEdges(activeElement)) {
                 int distance = bestLength + pathsCost[w];
                 //System.out.println(pathsCost[activeElement] + " "+ bestLength + " vertix: " + activeElement);
@@ -239,15 +344,19 @@ public class SAP {
                     if (marks[w] != nonMarks[w]) {
                         nonMarks[w] = true;
                         marks[w] = true;
+                        if (distance < path) {
+                            path = distance;
+                            ancestor = w; 
+                            if (path == bestLength) {
+                                return;
+                            }
+                        }
+
                         if (pathsCost[w] > bestLength) {
                             //System.out.println("Change1: " + bestLength + " vertix: " + w);
                             pathsCost[w] = bestLength;
                             needReset.add(w);
                             deque.add(w);
-                        }
-                        if (bestLength + pathsCost[w] < path) {
-                            path = bestLength + pathsCost[w];
-                            ancestor = w; 
                         }
                     } else if (!marks[w] && !nonMarks[w]) {
                         nonMarks[w] = true;
@@ -258,25 +367,27 @@ public class SAP {
                         deque.add(w);
                     }
                 } else {
-                    if (marks[w] != nonMarks[w]) {
+                    //System.out.println("mark " + marks[activeElement] + " " + nonMarks[activeElement]);
+                    //System.out.println(marks[w] + " " + nonMarks[w]);
+                    if (marks[w] || nonMarks[w]) {
                         if (marks[w] && nonMarks[activeElement]
-                            || nonMarks[w] && marks[activeElement]) {
-                            if (marks[w] != nonMarks[w]) {
-                                nonMarks[w] = true;
-                                marks[w] = true;
-                                if (pathsCost[w] > bestLength) {
-                                    //System.out.println("Change3: " + bestLength + " path: " + pathsCost[w] + " vertix: " + w);
-                                    pathsCost[w] = bestLength;
-                                    needReset.add(w);
-                                    deque.add(w);
-                                }
-                                if (bestLength + pathsCost[w] < path) {
-                                    path = bestLength + pathsCost[w];
-                                    ancestor = w; 
+                            || marks[activeElement] && nonMarks[w]) {
+                            if (distance < path) {
+                                path = distance;
+                                ancestor = w; 
+                                if (path == bestLength) {
+                                    return;
                                 }
                             }
                         }
-                    } else if (!marks[w] && !nonMarks[w]) {
+                        if (pathsCost[w] >= bestLength) {
+                            marks[w] = true;
+                            nonMarks[w] = true;
+                            pathsCost[w] = bestLength;
+                            needReset.add(w);
+                            deque.add(w);
+                        }
+                    } else {
                         if (marks[activeElement]) {
                             marks[w] = true;
                         } else {
@@ -290,7 +401,7 @@ public class SAP {
                 }
             }
         }
-    }
+    }*/
 
 /*                for (int w: getEdges(activeElement)) {
                 int distance = pathsCost[activeElement] + 1 + pathsCost[w];

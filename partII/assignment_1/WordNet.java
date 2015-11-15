@@ -9,7 +9,7 @@ import edu.princeton.cs.algs4.DirectedCycle;
 public class WordNet {
     private Digraph graph;
     private HashMap<String, Vector<Integer>> hashmap = new HashMap<String, Vector<Integer>>();
-    private HashMap<Integer, Vector<String>> nouns = new HashMap<Integer, Vector<String>>();
+    private HashMap<Integer, String> nouns = new HashMap<Integer, String>();
     private SAP sap;
     // constructor takes the name of the two input files
     public WordNet(String synsets, String hypernyms) {
@@ -19,16 +19,13 @@ public class WordNet {
             line = synsetFile.readLine();
             String[] array = line.split(",");
             int vertix = Integer.parseInt(array[0]);
+            nouns.put(vertix, array[1]);
             String[] noun = array[1].split(" ");
             for (int i = 0; i < noun.length; ++i) {
                 if (!hashmap.containsKey(noun[i])) {
                     hashmap.put(noun[i], new Vector<Integer>());
                 }
-                if (!nouns.containsKey(vertix)) {
-                    nouns.put(vertix, new Vector<String>());
-                }
                 hashmap.get(noun[i]).add(vertix);
-                nouns.get(vertix).add(noun[i]);
             }
         }
         graph = new Digraph(nouns.size());
@@ -115,18 +112,8 @@ public class WordNet {
         {
             ancestor = sap.ancestor(a, b);
         }
-        String result = null;
-        int iteration = 0;
-        for (String noun: nouns.get(ancestor)) {
-            if (iteration == 0) {
-                result = noun;
-                ++iteration;
-            } else
-            {
-                result = result + " " + noun; 
-            }
-        }
-        return result;
+
+        return nouns.get(ancestor);
     }
 
     // do unit testing of this class
