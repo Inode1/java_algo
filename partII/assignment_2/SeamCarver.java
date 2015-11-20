@@ -100,13 +100,13 @@ public class SeamCarver {
             distTo[i] = 0;
         }
 
+
         for (int j = 0; j < height - 1; ++j) {
             for (int i = 1; i < width - 1; ++i) {
                 int position = j * width + i;
                 relax(position, position + width);
-                relax(position, position + width + 1);
                 relax(position, position + width - 1);
-                // next position + 1; position + width + 1; position - width + 1 
+                relax(position, position + width + 1);
             }
         }
         return getSeam(false);
@@ -169,20 +169,22 @@ public class SeamCarver {
     }
 
     private double xGradient(int position) {
-        return Math.pow((pictureArray[position - 1] & GETCOLOR) - (pictureArray[position + 1] & GETCOLOR), 2) + 
-               Math.pow(((pictureArray[position - 1] >> 8) & GETCOLOR) - ((pictureArray[position + 1] >> 8) & GETCOLOR), 2) +
-               Math.pow(((pictureArray[position - 1] >> 16) & GETCOLOR) - ((pictureArray[position + 1] >> 16) & GETCOLOR), 2);
+        int red  = (pictureArray[position - 1] & GETCOLOR) - (pictureArray[position + 1] & GETCOLOR);
+        int blue = ((pictureArray[position - 1] >> 8) & GETCOLOR) - ((pictureArray[position + 1] >> 8) & GETCOLOR);
+        int green = ((pictureArray[position - 1] >> 16) & GETCOLOR) - ((pictureArray[position + 1] >> 16) & GETCOLOR);
+        return red * red + blue * blue + green * green;
     }
     
     private double yGradient(int position) {
-        return Math.pow((pictureArray[position - width] & GETCOLOR) - (pictureArray[position + width] & GETCOLOR), 2) + 
-               Math.pow(((pictureArray[position - width] >> 8) & GETCOLOR) - ((pictureArray[position + width] >> 8) & GETCOLOR), 2) +
-               Math.pow(((pictureArray[position - width] >> 16) & GETCOLOR) - ((pictureArray[position + width] >> 16) & GETCOLOR), 2);
+        int red = (pictureArray[position - width] & GETCOLOR) - (pictureArray[position + width] & GETCOLOR);
+        int blue = ((pictureArray[position - width] >> 8) & GETCOLOR) - ((pictureArray[position + width] >> 8) & GETCOLOR);
+        int green = ((pictureArray[position - width] >> 16) & GETCOLOR) - ((pictureArray[position + width] >> 16) & GETCOLOR);
+        return red * red + blue * blue + green * green;
     }
 
     private void relax(int from, int to) {
-        if (distTo[to] > distTo[from] + energyArray[from]) {
-            distTo[to] = distTo[from] + energyArray[from];
+        if (distTo[to] > distTo[from] + energyArray[to]) {
+            distTo[to] = distTo[from] + energyArray[to];
             edgeTo[to] = from;
         }
     }
@@ -192,7 +194,7 @@ public class SeamCarver {
         int lastElement = 0;
         double minElement = Double.POSITIVE_INFINITY;
         if (isHorizontal) {
-            for (int i = 2; i < height; ++i) {
+            for (int i = 1; i <= height; ++i) {
                 if (distTo[i * width - 1] < minElement) {
                     minElement  = distTo[i * width - 1];
                     lastElement = i * width - 1;
@@ -207,12 +209,14 @@ public class SeamCarver {
                 }
             }
         }
+
         if (isHorizontal) {
             result.push(lastElement / width);
         } 
         else {
             result.push(lastElement % width);  
         }
+        //result.push(result.peek());
         while (distTo[lastElement] != 0) {
             //System.out.println(lastElement);
             lastElement = edgeTo[lastElement];
@@ -224,9 +228,10 @@ public class SeamCarver {
                 result.push(lastElement % width);  
             }
         }
+
         int[] array = new int[result.size()];
         for (int i = 0; i < array.length; ++i) {
-            array[i] = result.get(i).intValue();
+            array[i] = result.get(array.length - i - 1).intValue();
         }
         return array;
     }
