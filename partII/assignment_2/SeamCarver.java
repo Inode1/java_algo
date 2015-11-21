@@ -6,8 +6,12 @@ public class SeamCarver {
 
     private int height;
     private int width;
+    private int widthAfterRemove;
     private int[] pictureArray;
     private float[] energyArray;
+
+    private float[] distToFirst;
+    private float[] distToSecond;
 
     private int[]    edgeTo;
 
@@ -17,23 +21,27 @@ public class SeamCarver {
         }
         height = picture.height();
         width  = picture.width();
+        widthAfterRemove = width;
         pictureArray = new int[height * width];
         energyArray  = new float[height * width];
         edgeTo  = new int[height * width];
+        int bigger = (height > width ? height : width);
+        distToFirst = new float[bigger];
+        distToSecond = new float[bigger];
+
         for (int i = 0; i < height; ++i) {
             for (int j = 0; j < width; ++j) {
                 // sequence RGB
                 pictureArray[i * width + j] = picture.get(j, i).getRGB();
-                energyArray[i * width + j] = 1000;
             }
         }
         computeEnergy();
     }
     
     public Picture picture() {                         // current picture
-        Picture picture = new Picture(width, height);
+        Picture picture = new Picture(widthAfterRemove, height);
         for (int i = 0; i < height; ++i) {
-            for (int j = 0; j < width; ++j) {
+            for (int j = 0; j < widthAfterRemove; ++j) {
                 // sequence RGB
                 picture.set(j, i, new Color(pictureArray[i * width + j])); 
             }
@@ -42,7 +50,7 @@ public class SeamCarver {
     }
     
     public     int width() {                           // width of current picture
-        return width;
+        return widthAfterRemove;
     }
     
     public     int height() {                          // height of current picture
@@ -50,77 +58,76 @@ public class SeamCarver {
     }
     
     public  double energy(int x, int y) {              // energy of pixel at column x and row y
-        if (x < 0 || x >= width) {
+        if (x < 0 || x >= widthAfterRemove) {
             throw new java.lang.IndexOutOfBoundsException();
         }
 
         if (y < 0 || y >= height) {
             throw new java.lang.IndexOutOfBoundsException();
         }
-        return (double) energyArray[y * width + x];
+
+        if (x == 0 || x == widthAfterRemove - 1 || 
+            y == 0 || y == height - 1) {
+            return 1000;
+        }
+        return Math.sqrt(yGradient(y * width + x) + xGradient(y * width + x));
     }
     
     // sequence of indices for horizontal seam
     public   int[] findHorizontalSeam() { 
-        int[] result = new int[width];
-        if (height <= 3 || width <= 2) {
-            for (int i = 0; i < width; ++i) {
+        int[] result = new int[widthAfterRemove];
+        if (height <= 3 || widthAfterRemove <= 2) {
+            for (int i = 0; i < widthAfterRemove; ++i) {
                 result[i] = height / 2;
             }
             return result;    
         }
 
         // array for check distance
-        float[] distToFirst = new float[height];
-        for (int i = 0; i < distToFirst.length; ++i) {
+        for (int i = 1; i < height - 1; ++i) {
             distToFirst[i] = energyArray[i * width + 1];
         }
 
-         float[] distToSecond = new float[height];
-
-        for (int j = 1; j < width - 2; ++j) {
+        for (int j = 1; j < widthAfterRemove - 2; ++j) {
             for (int i = 1; i < height - 1; ++i) {
-                relax(distToFirst, distToSecond, i * width + j, true, i);
+                relax(i * width + j, true, i);
             }
             float[] temp = distToFirst;
             distToFirst = distToSecond;
             distToSecond = temp;
         }
-        getSeam(distToFirst, result, true);
+        getSeam(result, true);
         return result;
     }
     
     public   int[] findVerticalSeam() {                // sequence of indices for vertical seam
         int[] result = new int[height];
-        if (width <= 3 || height <= 2) {
+        if (widthAfterRemove <= 3 || height <= 2) {
             for (int i = 0; i < height; ++i) {
-                result[i] = width / 2;
+                result[i] = widthAfterRemove / 2;
             }
             return result;    
         }
 
         // array for check distance
-        float[] distToFirst = new float[width];
-        for (int i = 0; i < distToFirst.length; ++i) {
+        for (int i = 1; i < widthAfterRemove - 1; ++i) {
             distToFirst[i] = energyArray[width + i];
         }
-        float[] distToSecond = new float[width];
-
 
         for (int j = 1; j < height - 2; ++j) {
-            for (int i = 1; i < width - 1; ++i) {
-                relax(distToFirst, distToSecond, j * width + i, false, i);
+            for (int i = 1; i < widthAfterRemove - 1; ++i) {
+                relax(j * width + i, false, i);
             }
             float[] temp = distToFirst;
             distToFirst = distToSecond;
             distToSecond = temp;
         }
-        getSeam(distToFirst, result, false);
+        getSeam(result, false);
         return result;
     }
     
     public    void removeHorizontalSeam(int[] seam) {  // remove horizontal seam from current picture
-        if (width != seam.length) {
+        if (widthAfterRemove != seam.length) {
             throw new java.lang.IllegalArgumentException();
         }
 
@@ -145,7 +152,7 @@ public class SeamCarver {
             throw new java.lang.IllegalArgumentException();
         }
         for (int i = 0; i < seam.length; ++i) {
-            if (seam[i] < 0 || seam[i] >= width) {
+            if (seam[i] < 0 || seam[i] >= widthAfterRemove) {
                 throw new java.lang.IllegalArgumentException();
             }
             if (i != 0) {
@@ -156,39 +163,17 @@ public class SeamCarver {
         }
 
         int countDelete = 0;
-        for (int i = 0; i < pictureArray.length; ++i) {
-                System.out.println(pictureArray[i]);
-            }
-            System.out.println("Out");
         for (int removeElement: seam) {
-            for (int i = 0; i < width; ++i) {
-                System.out.println(pictureArray[width * countDelete + i]);
-            }
-            System.out.println("Before");
-            if (removeElement != width - 1)
+            if (removeElement != widthAfterRemove - 1)
             {
-                System.out.println(removeElement);
                 System.arraycopy(pictureArray, countDelete * width + removeElement + 1, pictureArray, 
-                          countDelete * width + removeElement, width - removeElement - 1);
-            } else
-            {
-                System.out.println(countDelete);
-                System.out.println("removeElement" + removeElement);
-
+                                 countDelete * width + removeElement, widthAfterRemove - removeElement - 1);
+                System.arraycopy(energyArray, countDelete * width + removeElement + 1, energyArray, 
+                                 countDelete * width + removeElement, widthAfterRemove - removeElement - 1);
             }
-            for (int i = 0; i < width; ++i) {
-                System.out.println(pictureArray[width * countDelete + i]);
-            }
-            System.out.println("After");
-/*            System.arraycopy(energyArray, countDelete * width + removeElement + 1, energyArray, 
-                      countDelete * width + removeElement - countDelete, width);*/
             ++countDelete;
         }
-        --width;
-        for (int i = 0; i < pictureArray.length; ++i) {
-                System.out.println(pictureArray[i]);
-        }
-        System.out.println("Out");
+        --widthAfterRemove;
         computeEnergy();
     }
 
@@ -206,7 +191,7 @@ public class SeamCarver {
 
     private void computeEnergy() {
         for (int i = 1; i < height - 1; ++i) {
-            for (int j = 1; j < width - 1; ++j) {
+            for (int j = 1; j < widthAfterRemove - 1; ++j) {
                 energyArray[i * width + j] = (float) Math.sqrt(yGradient(i * width + j) + xGradient(i * width + j));
             }
         }
@@ -226,7 +211,7 @@ public class SeamCarver {
         return red * red + blue * blue + green * green;
     }
 
-    private void relax(float[] distToFirst, float[] distToSecond, int from, boolean isHorizontal, int to) {
+    private void relax(int from, boolean isHorizontal, int to) {
         int nextFirst  = 0;
         int nextSecond = 0;
         int nextThird  = 0;
@@ -258,12 +243,13 @@ public class SeamCarver {
         }
     }
 
-    private void getSeam(float[] distTo, int[] result, boolean isHorizontal) {
+    private void getSeam(int[] result, boolean isHorizontal) {
         int lastElement = 0;
         float minElement = Float.POSITIVE_INFINITY;
-        for (int i = 1; i < distTo.length - 1; ++i) {
-            if (minElement > distTo[i]) {
-                minElement = distTo[i];
+        int rightInterval = (isHorizontal ? height : widthAfterRemove);
+        for (int i = 1; i < rightInterval - 1; ++i) {
+            if (minElement > distToFirst[i]) {
+                minElement = distToFirst[i];
                 lastElement = i;
             }
         }
