@@ -7,7 +7,11 @@ public class SeamCarver {
     private int height;
     private int width;
     private int widthAfterRemove;
-    private int[] pictureArray;
+    private byte[] redArray; 
+    private byte[] greenArray;
+    private byte[] blueArray;
+
+    //private int[] pictureArray;
     private float[] energyArray;
 
     private float[] distToFirst;
@@ -22,7 +26,9 @@ public class SeamCarver {
         height = picture.height();
         width  = picture.width();
         widthAfterRemove = width;
-        pictureArray = new int[height * width];
+        redArray = new byte[height * width];
+        greenArray = new byte[height * width];
+        blueArray = new byte[height * width];
         energyArray  = new float[height * width];
         edgeTo  = new int[height * width];
         int bigger = (height > width ? height : width);
@@ -32,7 +38,9 @@ public class SeamCarver {
         for (int i = 0; i < height; ++i) {
             for (int j = 0; j < width; ++j) {
                 // sequence RGB
-                pictureArray[i * width + j] = picture.get(j, i).getRGB();
+                redArray[i * width + j] = (byte) picture.get(j, i).getRed();
+                greenArray[i * width + j] = (byte) picture.get(j, i).getGreen();
+                blueArray[i * width + j] = (byte) picture.get(j, i).getBlue();
             }
         }
         computeEnergy();
@@ -43,7 +51,8 @@ public class SeamCarver {
         for (int i = 0; i < height; ++i) {
             for (int j = 0; j < widthAfterRemove; ++j) {
                 // sequence RGB
-                picture.set(j, i, new Color(pictureArray[i * width + j])); 
+                picture.set(j, i, new Color(redArray[i * width + j] & GETCOLOR, 
+                    greenArray[i * width + j] & GETCOLOR, blueArray[i * width + j] & GETCOLOR)); 
             }
         }
         return picture;
@@ -166,7 +175,11 @@ public class SeamCarver {
         for (int removeElement: seam) {
             if (removeElement != widthAfterRemove - 1)
             {
-                System.arraycopy(pictureArray, countDelete * width + removeElement + 1, pictureArray, 
+                System.arraycopy(redArray, countDelete * width + removeElement + 1, redArray, 
+                                 countDelete * width + removeElement, widthAfterRemove - removeElement - 1);
+                System.arraycopy(greenArray, countDelete * width + removeElement + 1, greenArray, 
+                                 countDelete * width + removeElement, widthAfterRemove - removeElement - 1);
+                System.arraycopy(blueArray, countDelete * width + removeElement + 1, blueArray, 
                                  countDelete * width + removeElement, widthAfterRemove - removeElement - 1);
                 System.arraycopy(energyArray, countDelete * width + removeElement + 1, energyArray, 
                                  countDelete * width + removeElement, widthAfterRemove - removeElement - 1);
@@ -182,7 +195,9 @@ public class SeamCarver {
             int position = i + seam[i] * width;
             while (position / width != height - 1) {
                 int next = position + width;
-                pictureArray[position] = pictureArray[next];
+                redArray[position] = redArray[next];
+                greenArray[position] = greenArray[next];
+                blueArray[position] = blueArray[next];
                 energyArray[position]  = energyArray[next];
                 position = next;
             }
@@ -198,16 +213,20 @@ public class SeamCarver {
     }
 
     private float xGradient(int position) {
-        int red  = (pictureArray[position - 1] & GETCOLOR) - (pictureArray[position + 1] & GETCOLOR);
+/*        int red  = (pictureArray[position - 1] & GETCOLOR) - (pictureArray[position + 1] & GETCOLOR);
         int blue = ((pictureArray[position - 1] >> 8) & GETCOLOR) - ((pictureArray[position + 1] >> 8) & GETCOLOR);
-        int green = ((pictureArray[position - 1] >> 16) & GETCOLOR) - ((pictureArray[position + 1] >> 16) & GETCOLOR);
+        int green = ((pictureArray[position - 1] >> 16) & GETCOLOR) - ((pictureArray[position + 1] >> 16) & GETCOLOR);*/
+        int red = (redArray[position - 1] & GETCOLOR) - (redArray[position + 1] & GETCOLOR);
+        int blue = (blueArray[position - 1] & GETCOLOR) - (blueArray[position + 1] & GETCOLOR);
+        int green = (greenArray[position - 1] & GETCOLOR) - (greenArray[position + 1] & GETCOLOR);
         return red * red + blue * blue + green * green;
     }
     
     private float yGradient(int position) {
-        int red = (pictureArray[position - width] & GETCOLOR) - (pictureArray[position + width] & GETCOLOR);
-        int blue = ((pictureArray[position - width] >> 8) & GETCOLOR) - ((pictureArray[position + width] >> 8) & GETCOLOR);
-        int green = ((pictureArray[position - width] >> 16) & GETCOLOR) - ((pictureArray[position + width] >> 16) & GETCOLOR);
+        //return redArray[]
+        int red = (redArray[position - width] & GETCOLOR) - (redArray[position + width] & GETCOLOR);
+        int blue = (blueArray[position - width] & GETCOLOR) - (blueArray[position + width] & GETCOLOR);
+        int green = (greenArray[position - width] & GETCOLOR) - (greenArray[position + width] & GETCOLOR);
         return red * red + blue * blue + green * green;
     }
 
@@ -268,6 +287,10 @@ public class SeamCarver {
         result[0] = result[1];
     }
 
-    public static void main(String[] args) { 
+    public static void main(String[] args) {
+        char he = 245;
+        char p = 233;
+        int c = p - he;
+        System.out.print(c); 
     }
 }

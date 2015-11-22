@@ -15,21 +15,16 @@ import edu.princeton.cs.algs4.StdOut;
 public class PrintEnergy {
 
     public static void main(String[] args) {
-        Picture picture = new Picture(SCUtility.createPicture());
+        Picture picture = new Picture(args[0]);
         StdOut.printf("image is %d pixels wide by %d pixels high.\n", picture.width(), picture.height());
         SeamCarver sc = new SeamCarver(picture);
         
-        for (int j = 0; j < picture.height(); j++) {
+/*        for (int j = 0; j < picture.height(); j++) {
             for (int i = 0; i < picture.width(); i++)
                 StdOut.printf("%d,%d,%d ", picture.get(i, j).getRed(), picture.get(i, j).getGreen(), picture.get(i, j).getBlue());
             StdOut.println();
         }
 
-/*        for (int j = 0; j < sc.height(); j++) {
-            for (int i = 0; i < sc.width(); i++)
-                StdOut.printf("%d,%d,%d ", sc.picture().get(i, j).getRed(), sc.picture().get(i, j).getGreen(), sc.picture().get(i, j).getBlue());
-            StdOut.println();
-        }*/
             int[] verticalSeam = sc.findHorizontalSeam();
             verticalSeam = sc.findHorizontalSeam();
             sc.removeHorizontalSeam(verticalSeam);
@@ -57,13 +52,13 @@ public class PrintEnergy {
             StdOut.print(y + " ");
         StdOut.println("}");
         PrintSeams.printSeam(sc, horizontalSeam, false);
-  
+*/  
 
-/*        for (int j = 0; j < sc.height(); j++) {
+        for (int j = 0; j < sc.height(); j++) {
             for (int i = 0; i < sc.width(); i++)
                 System.out.print(sc.energy(i, j) + " ");
             StdOut.println();
-        }*/
+        }
     }
 
 }
