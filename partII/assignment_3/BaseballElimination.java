@@ -3,29 +3,34 @@ import java.util.TreeMap;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.ArrayList;
+import java.util.Stack;
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.FlowEdge;
 import edu.princeton.cs.algs4.FlowNetwork;
+import edu.princeton.cs.algs4.FordFulkerson;
 
 public class BaseballElimination {
     // input data
     private Hashtable<String, Integer> teams;
-    private int[] wins;
-    private int[] losses;
-    private int[] remainingGames;
-    private int[] gamesLeft;
-    private int   size;
+    private String[] teamsName;
+    private int[]    wins;
+    private int[]    losses;
+    private int[]    remainingGames;
+    private int[]    gamesLeft;
+    private int      size;
     // internal data
     private FlowNetwork network;
     private ArrayList<Integer> eliminatedTeams;
     // key wins, value team number
     private TreeMap<Integer, Integer> sortedBestTeams = new TreeMap<Integer, Integer>();
+    private Stack<String> eliminatTeams;
 
     public BaseballElimination(String filename) {                    // create a baseball division from given filename in format specified below
         In file    = new In(filename);
         size       = file.readInt();
         teams      = new Hashtable<String, Integer>(size);
+        teamsName  = new String[size];
         wins       = new int[size];
         losses     = new int[size];
         remainingGames  = new int[size];
@@ -34,7 +39,8 @@ public class BaseballElimination {
         // read input data        
         int i = 0;
         while (i != size) {
-            teams.put(file.readString(), i);
+            teamsName[i] = file.readString();
+            teams.put(teamsName[i], i);
             wins[i]           = file.readInt();
             sortedBestTeams.put(wins[i], i);
             losses[i]         = file.readInt();
@@ -45,10 +51,6 @@ public class BaseballElimination {
             }
             ++i;
         }
-        network = new FlowNetwork(size);
-
-
-
     }
     
     public              int numberOfTeams() {                        // number of teams
@@ -78,11 +80,16 @@ public class BaseballElimination {
     }
     
     public          boolean isEliminated(String team) {              // is given team eliminated?
-        return checkTrivialCase(teams.get(team));
+        int that = checkTeams(team);
+        if (checkTrivialCase(that)) {
+            return true;
+        }
+        checkNonTrivialCase(that);
+        return false;
     }
     
     public Iterable<String> certificateOfElimination(String team) {  // subset R of teams that eliminates given team; null if not eliminated
-        return null;
+        return eliminatTeams;
     }
 
     private int checkTeams(String team) {
@@ -96,18 +103,50 @@ public class BaseballElimination {
     private boolean checkTrivialCase(int teamNumber) {
         NavigableMap<Integer, Integer> teamsIsBetter = sortedBestTeams.tailMap(wins[teamNumber] + remainingGames[teamNumber]
                                                         , false);
+        eliminatTeams = new Stack<String>(); 
         if (teamsIsBetter.isEmpty()) {
             return false;
         }
-        System.out.printf("team: %d\n", teamNumber);   
-        for(Map.Entry<Integer, Integer> entry: teamsIsBetter.entrySet())
+        for (Map.Entry<Integer, Integer> entry: teamsIsBetter.entrySet())
         {
-            System.out.println("teams: " + entry.getValue());
+            eliminatTeams.push(teamsName[entry.getValue()]);
         }
-/*        Iterator it = teamsIsBetter.iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry)it.next();
-            System.out.println(pair.getKey() + " = " + pair.getValue());
+        return true;
+    }
+
+    private boolean checkNonTrivialCase(int teamNumber) {
+        int flowNetworkSize = ((size - 1) * (size - 2) / 2) + size - 1 + 2;
+        network = new FlowNetwork(flowNetworkSize);
+        int accumulator = 0;
+        int i = 1;
+        int teamCanWin = wins[teamNumber] + remainingGames[teamNumber];
+        for (int pj = 0, j = 0; j < size; ++j, ++pj) {
+            if (j == teamNumber) {
+                --pj;
+                continue;
+            }
+
+            for (int pz = j + 1, z = j + 1; z < size; ++z, ++pz) {
+                if (z == teamNumber) {
+                    --pz;
+                    continue;
+                }
+
+                network.addEdge(new FlowEdge(0, i, gamesLeft[j * size + z]));
+                accumulator += gamesLeft[j * size + z];
+                network.addEdge(new FlowEdge(i, network.V() - size + pj, Integer.MAX_VALUE));
+                network.addEdge(new FlowEdge(i, network.V() - size + pz, Integer.MAX_VALUE));
+                ++i;
+            }
+            network.addEdge(new FlowEdge(network.V() - size + pj, network.V() - 1, teamCanWin - wins[j]));
+        }
+        FordFulkerson solve = new FordFulkerson(network, 0, network.V() - 1);
+        System.out.printf("team %d: %f acc %d\n", teamNumber, solve.value(), accumulator);
+
+
+        /*for (Map.Entry<Integer, Integer> entry: teamsIsBetter.entrySet())
+        {
+            eliminatTeams.push(teamsName[entry.getValue()]);
         }*/
         return false;
     }
