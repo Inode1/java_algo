@@ -25,6 +25,7 @@ public class BaseballElimination {
     // key wins, value team number
     private TreeMap<Integer, Integer> sortedBestTeams = new TreeMap<Integer, Integer>();
     private Stack<String> eliminatTeams;
+    private ArrayList<Stack<String>> cache;
 
     public BaseballElimination(String filename) {                    // create a baseball division from given filename in format specified below
         In file    = new In(filename);
@@ -35,7 +36,7 @@ public class BaseballElimination {
         losses     = new int[size];
         remainingGames  = new int[size];
         gamesLeft       = new int[size * size];
-
+        cache           = new ArrayList<Stack<String>>(size);
         // read input data        
         int i = 0;
         while (i != size) {
@@ -50,6 +51,14 @@ public class BaseballElimination {
                 gamesLeft[i * size + j] = file.readInt();
             }
             ++i;
+        }
+
+        for (int k = 0; k < size; ++k) {
+            if (checkTrivialCase(k) || checkNonTrivialCase(k)) {
+                cache.add(eliminatTeams);
+                continue;
+            }
+            cache.add(null);
         }
     }
     
@@ -76,20 +85,15 @@ public class BaseballElimination {
     public              int against(String team1, String team2) {    // number of remaining games between team1 and team2
         int lhs = checkTeams(team1);
         int rhs = checkTeams(team2);
-        return wins[lhs * size + rhs];
+        return gamesLeft[lhs * size + rhs];
     }
     
     public          boolean isEliminated(String team) {              // is given team eliminated?
-        int that = checkTeams(team);
-        if (checkTrivialCase(that)) {
-            return true;
-        }
-        checkNonTrivialCase(that);
-        return false;
+        return cache.get(checkTeams(team)) != null;
     }
     
     public Iterable<String> certificateOfElimination(String team) {  // subset R of teams that eliminates given team; null if not eliminated
-        return eliminatTeams;
+        return cache.get(checkTeams(team));
     }
 
     private int checkTeams(String team) {
@@ -125,8 +129,11 @@ public class BaseballElimination {
                 --pj;
                 continue;
             }
-
-            for (int pz = j + 1, z = j + 1; z < size; ++z, ++pz) {
+            int pz = j + 1;
+            if (pz > teamNumber) {
+                --pz;
+            }
+            for (int z = j + 1; z < size; ++z, ++pz) {
                 if (z == teamNumber) {
                     --pz;
                     continue;
@@ -134,20 +141,31 @@ public class BaseballElimination {
 
                 network.addEdge(new FlowEdge(0, i, gamesLeft[j * size + z]));
                 accumulator += gamesLeft[j * size + z];
+                //System.out.printf("first %d second => %d, second => %d\n", i, network.V() - size + pj, network.V() - size + pz);
+                //System.out.println(network.V() + " " + size + " " + pj);
                 network.addEdge(new FlowEdge(i, network.V() - size + pj, Integer.MAX_VALUE));
                 network.addEdge(new FlowEdge(i, network.V() - size + pz, Integer.MAX_VALUE));
                 ++i;
             }
             network.addEdge(new FlowEdge(network.V() - size + pj, network.V() - 1, teamCanWin - wins[j]));
+            //System.out.printf("second %d last => %d\n", network.V() - size + pj, network.V() - 1);
         }
         FordFulkerson solve = new FordFulkerson(network, 0, network.V() - 1);
-        System.out.printf("team %d: %f acc %d\n", teamNumber, solve.value(), accumulator);
-
-
-        /*for (Map.Entry<Integer, Integer> entry: teamsIsBetter.entrySet())
-        {
-            eliminatTeams.push(teamsName[entry.getValue()]);
-        }*/
+            //System.out.printf("team %d: %f acc %d acc2 %d\n", teamNumber, solve.value(), accumulator, accumulator2);
+        if (solve.value() != accumulator)
+        {   
+            i = 0;
+            for (int j = 0; j < size; ++j, ++i) {
+                if (j == teamNumber) {
+                    --i;
+                    continue;
+                }
+                if (solve.inCut(network.V() - size + i)) {
+                    eliminatTeams.push(teamsName[j]);
+                }
+            }
+            return true;
+        }
         return false;
     }
 
