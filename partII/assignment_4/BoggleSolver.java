@@ -6,7 +6,7 @@ import java.util.HashSet;
 
 public class BoggleSolver
 {
-    private Node root = new Node();
+    private Node root = new Node(null);
     private Stack<String> dict = new Stack<String>();
     private HashSet<String> result = new HashSet<String>();
     //private Stack<String> allFindPrefix = new Stack<String>();
@@ -15,16 +15,15 @@ public class BoggleSolver
     // Initializes the data structure using the given array of strings as the dictionary.
     // (You can assume each word in the dictionary contains only the uppercase letters A through Z.)
     public BoggleSolver(String[] dictionary) {
-        int index = 0;
         for (String word: dictionary) {
             Node iterator = root;
             for (int i = 0; i < word.length(); ++i) {
                 if (iterator.next[(int) word.charAt(i) - 65] == null) {
-                    iterator.next[(int) word.charAt(i) - 65] = new Node();
+                    iterator.next[(int) word.charAt(i) - 65] = new Node(iterator);
                 }
                 iterator = iterator.next[(int) word.charAt(i) - 65];
             }
-            iterator.value = ++index; 
+            iterator.value = true; 
         }
         //getAllWord(root, "");
     }
@@ -67,24 +66,20 @@ public class BoggleSolver
                     if (j > 0) {
                        precomputeArray[number][p++] = i * board.cols() + j - 1;
                        if (isGood) {
-                        precomputeArray[number][p++] = (i + 1) * board.cols() + j - 1; 
+                            precomputeArray[number][p++] = (i + 1) * board.cols() + j - 1; 
                        }
                     }
                     if (j + 1 < board.cols()) {
                        precomputeArray[number][p++] = i * board.cols() + j + 1;
                        if (isGood) {
-                        precomputeArray[number][p++] = (i + 1) * board.cols() + j + 1; 
+                            precomputeArray[number][p++] = (i + 1) * board.cols() + j + 1; 
                        } 
                     }
                 }
                 precomputeArray[number][p] = -1;
             }
         }
-        for (int i = 0; i < board.rows(); ++i) {
-            for (int j = 0; j < board.cols(); ++j) {
-                deepFirstSearch(root, i * board.cols() + j, board, new StringBuffer(board.rows() * board.cols()), new boolean[board.rows() * board.cols()]);
-            }
-        }
+        deepFirstSearch(board);
         return result;
     }
 
@@ -103,12 +98,16 @@ public class BoggleSolver
 
     private class Node {
         private static final int RADIX = 26;
-        public Object value;
-        public Node[] next = new Node[RADIX]; 
+        private Node(Node back) {
+            this.back = back;
+        }
+        private boolean value;
+        private Node[] next = new Node[RADIX];
+        private Node back; 
     }
 
     private void getAllWord(Node position, String prefix) {
-        if (position.value != null) {
+        if (position.value) {
             dict.push(prefix);
         }
         for (int i = 0; i < Node.RADIX; ++i) {
@@ -127,35 +126,105 @@ public class BoggleSolver
                 return false;
             }
         }
-        if (position.value == null) {
-            return false;
+        return position.value; 
+    }
+
+    private void deepFirstSearch(BoggleBoard board) {
+        Stack<String> prefixString = new Stack<String>(); 
+        Stack<Integer> alreadyBeingUpdate = new Stack<Integer>();
+
+        boolean[] alreadyBeing = new boolean[board.rows() * board.cols()];
+        for (int i = 0; i < board.rows(); ++i) {
+            for (int j = 0; j < board.cols(); ++j){
+                int start = j * board.cols() + j;
+                Node position = root;
+                
+                alreadyBeing[start] = true;
+                alreadyBeingUpdate.push(start);
+                
+                prefixString.push("" + board.getLetter(i, j));
+                while (!prefixString.isEmpty()) {
+
+                    String prefix = prefixString.pop();
+                    char sybvols  = prefix.charAt(prefix.length() - 1);
+                    
+                    if (position.next[sybvols - 65] == null) {
+                        alreadyBeing[alreadyBeingUpdate.pop()] = false;
+                        position = position.back;
+                        if (position == null) {
+                            position = root;
+                        }
+                        continue;
+                    }
+
+                    position = position.next[sybvols - 65];
+                    
+                    if (sybvols == 'Q') {
+                        if (position.next['U' - 65] == null) {
+                            alreadyBeing[alreadyBeingUpdate.pop()] = false;
+                            position = position.back;
+                            if (position == null) {
+                                position = root;
+                            }
+                            continue;
+                        }
+                        position = position.next['U' - 65];
+                        prefix += 'U';
+                    } 
+
+                    if (position.value && prefix.length() >= 3) {
+                        result.add(prefix);
+                    }
+
+                    int size = prefixString.size();
+                    for (int k = 0; k < 8 && precomputeArray[i][k] != -1; ++k) {
+                        start = precomputeArray[i][k];
+                        if (alreadyBeing[start] == true) {
+                            continue;
+                        }
+                        alreadyBeing[start] = true;
+                        alreadyBeingUpdate.push(start);
+                        prefixString.push(prefix + board.getLetter(start / board.cols(), start % board.cols()));
+                    }
+
+                    if (size == prefixString.size()) {
+                        alreadyBeing[alreadyBeingUpdate.pop()] = false;
+                        position = position.back;
+                        if (position == null) {
+                            position = root;
+                        }
+                    }
+
+                }
+
+                while (!alreadyBeingUpdate.isEmpty()) {
+                    alreadyBeing[alreadyBeingUpdate.pop()] = false;
+                }
+            }
         }
-        // need prefix push in all valid word
-        return true;
+
     }
 
-    private Node notInDict(Node position, int i) {
-        return position.next[i];
-    }
-
-    private void deepFirstSearch(Node position, int i, BoggleBoard board, StringBuffer prefix, boolean[] alreadyBeing) {
+/*    private void deepFirstSearch(Node position, int i, BoggleBoard board, String prefix, boolean[] alreadyBeing) {
         alreadyBeing[i] = true;
-        position = notInDict(position, board.getLetter(i / board.rows(), i % board.rows()) - 65);
+        int j = i / board.cols();
+        int z = i % board.cols();
+        position = position.next[board.getLetter(j, z) - 65];
         if (position == null) {
             return;
         }
-        prefix.append(board.getLetter(i / board.rows(), i % board.rows()));
-        if (board.getLetter(i / board.rows(), i % board.rows()) == 'Q') {
-            position = notInDict(position, (int) 'U' - 65);
+        prefix += board.getLetter(j, z);
+        if (board.getLetter(j, z) == 'Q') {
+            position = position.next[(int) 'U' - 65];
             if (position == null) {
                 return;
             }
-            prefix.append("U");
+            prefix += "U";
         }
         
-        if (position.value != null && prefix.length() >= 3) {
+        if (position.value && prefix.length() >= 3) {
             //dict.push(prefix.toString());
-            result.add(prefix.toString());
+            result.add(prefix);
         }
 
         for (int k = 0; k < 8 && precomputeArray[i][k] != -1; ++k) {
@@ -163,24 +232,19 @@ public class BoggleSolver
             if (alreadyBeing[temp] == true) {
                 continue;
             }
-            deepFirstSearch(position, temp ,board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
+            deepFirstSearch(position, temp, board, prefix, alreadyBeing);
+            alreadyBeing[temp] = false;
         }
-/*        deepFirstSearch(position, i - 1, j - 1, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
-        deepFirstSearch(position, i - 1, j, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
-        deepFirstSearch(position, i - 1, j + 1, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
-        deepFirstSearch(position, i, j - 1, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
-        deepFirstSearch(position, i, j + 1, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
-        deepFirstSearch(position, i + 1, j - 1, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
-        deepFirstSearch(position, i + 1, j, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
-        deepFirstSearch(position, i + 1, j + 1, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));*/
-
-    }
+    }*/
 
     public static void main(String[] args) {
-        double start = System.nanoTime();
         In in = new In(args[0]);
         String[] dictionary = in.readAllStrings();
+        long start = System.nanoTime();
         BoggleSolver solver = new BoggleSolver(dictionary);
+        start = System.nanoTime() - start;
+        System.out.println("Elapsed time: " + start);
+        start = System.nanoTime();
         BoggleBoard board = new BoggleBoard(args[1]);
         int score = 0;
         int count = 0;
@@ -191,6 +255,6 @@ public class BoggleSolver
             ++count;
         }
         StdOut.println("Score = " + score + " Count = " + count);
-        System.out.printf("Elapsed time: %f\n", System.nanoTime() - start);
+        System.out.println("Elapsed time: " + (System.nanoTime() - start));
     }
 }
