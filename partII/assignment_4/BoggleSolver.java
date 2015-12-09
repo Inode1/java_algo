@@ -2,13 +2,16 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 import java.util.Stack;
 import java.util.Arrays;
+import java.util.HashSet;
 
 public class BoggleSolver
 {
     private Node root = new Node();
     private Stack<String> dict = new Stack<String>();
-    private Stack<String> allFindPrefix = new Stack<String>();
+    private HashSet<String> result = new HashSet<String>();
+    //private Stack<String> allFindPrefix = new Stack<String>();
     private int[] scourePoints = {0, 0, 0, 1, 1, 2, 3, 5, 11};
+    private int[][] precomputeArray;
     // Initializes the data structure using the given array of strings as the dictionary.
     // (You can assume each word in the dictionary contains only the uppercase letters A through Z.)
     public BoggleSolver(String[] dictionary) {
@@ -28,27 +31,70 @@ public class BoggleSolver
 
     // Returns the set of all valid words in the given Boggle board, as an Iterable.
     public Iterable<String> getAllValidWords(BoggleBoard board) {
+        result.clear();
+        precomputeArray = new int[board.rows() * board.cols()][9];
         for (int i = 0; i < board.rows(); ++i) {
             for (int j = 0; j < board.cols(); ++j) {
-                deepFirstSearch(i, j, board, "", new boolean[board.rows() * board.cols()]);
+                int p = 0;
+                boolean isGood = false;
+                int number = i * board.cols() + j;
+                if (i > 0) {
+                    precomputeArray[number][p++] = (i - 1) * board.cols() + j;
+                    if (i + 1 < board.rows()) {
+                        precomputeArray[number][p++] = (i + 1) * board.cols() + j;
+                        isGood = true;
+                    }
+                    if (j > 0) {
+                       precomputeArray[number][p++] = i * board.cols() + j - 1;
+                       if (isGood) {
+                        precomputeArray[number][p++] = (i + 1) * board.cols() + j - 1; 
+                       } 
+                       precomputeArray[number][p++] = (i - 1) * board.cols() + j - 1; 
+                    }
+                    if (j + 1 < board.cols()) {
+                       precomputeArray[number][p++] = i * board.cols() + j + 1;
+                       if (isGood) {
+                        precomputeArray[number][p++] = (i + 1) * board.cols() + j + 1; 
+                       } 
+                       precomputeArray[number][p++] = (i - 1) * board.cols() + j + 1; 
+                    }
+                }
+                else {
+                    if (i + 1 < board.rows()) {
+                        precomputeArray[number][p++] = (i + 1) * board.cols() + j;
+                        isGood = true;
+                    }
+                    if (j > 0) {
+                       precomputeArray[number][p++] = i * board.cols() + j - 1;
+                       if (isGood) {
+                        precomputeArray[number][p++] = (i + 1) * board.cols() + j - 1; 
+                       }
+                    }
+                    if (j + 1 < board.cols()) {
+                       precomputeArray[number][p++] = i * board.cols() + j + 1;
+                       if (isGood) {
+                        precomputeArray[number][p++] = (i + 1) * board.cols() + j + 1; 
+                       } 
+                    }
+                }
+                precomputeArray[number][p] = -1;
             }
         }
-
-        for (String word: allFindPrefix) {
-            if (word.length() < 3) {
-                continue;
-            }
-            if (inDictionary(word)) {
-                dict.push(word);
+        for (int i = 0; i < board.rows(); ++i) {
+            for (int j = 0; j < board.cols(); ++j) {
+                deepFirstSearch(root, i * board.cols() + j, board, new StringBuffer(board.rows() * board.cols()), new boolean[board.rows() * board.cols()]);
             }
         }
-        return dict;
+        return result;
     }
 
     // Returns the score of the given word if it is in the dictionary, zero otherwise.
     // (You can assume the word contains only the uppercase letters A through Z.) 
     public int scoreOf(String word) {
         int len = word.length();
+        if (!inDictionary(word)) {
+            len = 0;
+        }
         if (len > 8) {
             return 11;
         }
@@ -88,58 +134,63 @@ public class BoggleSolver
         return true;
     }
 
-    private boolean notInDict(String prefix) {
-        Node position = root;
-        for (int i = 0; i < prefix.length(); ++i) {
-            position = position.next[prefix.charAt(i) - 65];
-            if (position == null) {
-                return false;
-            }
-        }
-        return true;
+    private Node notInDict(Node position, int i) {
+        return position.next[i];
     }
 
-    private void deepFirstSearch(int i, int j, BoggleBoard board, String prefix, boolean[] alreadyBeing) {
-        if (i < 0 || i >= board.rows()) {
+    private void deepFirstSearch(Node position, int i, BoggleBoard board, StringBuffer prefix, boolean[] alreadyBeing) {
+        alreadyBeing[i] = true;
+        position = notInDict(position, board.getLetter(i / board.rows(), i % board.rows()) - 65);
+        if (position == null) {
             return;
         }
-        if (j < 0 || j >= board.cols()) {
-            return;
+        prefix.append(board.getLetter(i / board.rows(), i % board.rows()));
+        if (board.getLetter(i / board.rows(), i % board.rows()) == 'Q') {
+            position = notInDict(position, (int) 'U' - 65);
+            if (position == null) {
+                return;
+            }
+            prefix.append("U");
         }
-        if (alreadyBeing[i * board.cols() + j] == false) {
-            alreadyBeing[i * board.cols() + j] = true;
+        
+        if (position.value != null && prefix.length() >= 3) {
+            //dict.push(prefix.toString());
+            result.add(prefix.toString());
         }
-        else
-        {
-            return;
+
+        for (int k = 0; k < 8 && precomputeArray[i][k] != -1; ++k) {
+            int temp = precomputeArray[i][k];
+            if (alreadyBeing[temp] == true) {
+                continue;
+            }
+            deepFirstSearch(position, temp ,board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
         }
-        prefix += board.getLetter(i, j);
-        if (!notInDict(prefix)) {
-            return;
-        }
-        allFindPrefix.push(prefix);
-        deepFirstSearch(i - 1, j - 1, board, prefix, Arrays.copyOf(alreadyBeing, alreadyBeing.length));
-        deepFirstSearch(i - 1, j, board, prefix, Arrays.copyOf(alreadyBeing, alreadyBeing.length));
-        deepFirstSearch(i - 1, j + 1, board, prefix, Arrays.copyOf(alreadyBeing, alreadyBeing.length));
-        deepFirstSearch(i, j - 1, board, prefix, Arrays.copyOf(alreadyBeing, alreadyBeing.length));
-        deepFirstSearch(i, j + 1, board, prefix, Arrays.copyOf(alreadyBeing, alreadyBeing.length));
-        deepFirstSearch(i + 1, j - 1, board, prefix, Arrays.copyOf(alreadyBeing, alreadyBeing.length));
-        deepFirstSearch(i + 1, j, board, prefix, Arrays.copyOf(alreadyBeing, alreadyBeing.length));
-        deepFirstSearch(i + 1, j + 1, board, prefix, Arrays.copyOf(alreadyBeing, alreadyBeing.length));
+/*        deepFirstSearch(position, i - 1, j - 1, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
+        deepFirstSearch(position, i - 1, j, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
+        deepFirstSearch(position, i - 1, j + 1, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
+        deepFirstSearch(position, i, j - 1, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
+        deepFirstSearch(position, i, j + 1, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
+        deepFirstSearch(position, i + 1, j - 1, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
+        deepFirstSearch(position, i + 1, j, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));
+        deepFirstSearch(position, i + 1, j + 1, board, new StringBuffer(prefix), Arrays.copyOf(alreadyBeing, alreadyBeing.length));*/
 
     }
 
     public static void main(String[] args) {
+        double start = System.nanoTime();
         In in = new In(args[0]);
         String[] dictionary = in.readAllStrings();
         BoggleSolver solver = new BoggleSolver(dictionary);
         BoggleBoard board = new BoggleBoard(args[1]);
         int score = 0;
+        int count = 0;
         for (String word : solver.getAllValidWords(board))
         {
             StdOut.println(word);
             score += solver.scoreOf(word);
+            ++count;
         }
-        StdOut.println("Score = " + score);
+        StdOut.println("Score = " + score + " Count = " + count);
+        System.out.printf("Elapsed time: %f\n", System.nanoTime() - start);
     }
 }
