@@ -1,7 +1,7 @@
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 import java.util.Stack;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 public class BoggleSolver
@@ -11,6 +11,8 @@ public class BoggleSolver
     private HashSet<String> result = new HashSet<String>();
     //private Stack<String> allFindPrefix = new Stack<String>();
     private int[] scourePoints = {0, 0, 0, 1, 1, 2, 3, 5, 11};
+    private ArrayList<ArrayList<Integer>> precompute;
+
     private int[][] precomputeArray;
     // Initializes the data structure using the given array of strings as the dictionary.
     // (You can assume each word in the dictionary contains only the uppercase letters A through Z.)
@@ -18,13 +20,27 @@ public class BoggleSolver
         root.back = root;
         for (String word: dictionary) {
             Node iterator = root;
+            boolean flag = true;
             for (int i = 0; i < word.length(); ++i) {
-                if (iterator.next[(int) word.charAt(i) - 65] == null) {
-                    iterator.next[(int) word.charAt(i) - 65] = new Node(iterator);
+                int symb = (int) word.charAt(i) - 65;
+                // Q
+                if (symb == 16) {
+                    if (i + 1 < word.length()) {
+                        if ((int) word.charAt(i + 1) - 65 == 20) {
+                            i += 1;
+                        }
+                    } else
+                    {
+                        flag = false;
+                        break;
+                    }
                 }
-                iterator = iterator.next[(int) word.charAt(i) - 65];
+                if (iterator.next[symb] == null) {
+                    iterator.next[symb] = new Node(iterator);
+                }
+                iterator = iterator.next[symb];
             }
-            iterator.value = true; 
+            iterator.value = flag; 
         }
         //getAllWord(root, "");
     }
@@ -32,10 +48,30 @@ public class BoggleSolver
     // Returns the set of all valid words in the given Boggle board, as an Iterable.
     public Iterable<String> getAllValidWords(BoggleBoard board) {
         result.clear();
-        precomputeArray = new int[board.rows() * board.cols()][9];
-        for (int i = 0; i < board.rows(); ++i) {
+        precompute = new ArrayList<ArrayList<Integer>>(board.rows() * board.cols());
+        //precompute.addAll(new ArrayList<Integer>(8));
+        //precomputeArray = new int[board.rows() * board.cols()][9];
+        for (int i = 0; i < board.rows() * board.cols(); ++i) {
+            precompute.add(new ArrayList<Integer>(8));
+        }
+        for (int i = 0; i < board.rows() - 1; ++i) {
             for (int j = 0; j < board.cols(); ++j) {
-                int p = 0;
+                int temp = i * board.cols() + j;
+                ArrayList<Integer> that = precompute.get(temp);
+                that.add((i + 1)* board.cols() + j);
+                precompute.get((i + 1)* board.cols() + j).add(temp);
+                if (j + 1 < board.cols()) {
+                    that.add(temp + 1);
+                    that.add((i + 1)* board.cols() + j + 1);
+                    precompute.get(i * board.cols() + j + 1).add(temp);
+                    precompute.get((i + 1)* board.cols() + j + 1).add(temp);                
+                }
+                if (j > 0) {
+                    that.add((i + 1)* board.cols() + j - 1);
+                    precompute.get((i + 1)* board.cols() + j - 1).add(temp);
+                }
+
+/*                int p = 0;
                 boolean isGood = false;
                 int number = i * board.cols() + j;
                 if (i > 0) {
@@ -77,14 +113,22 @@ public class BoggleSolver
                        } 
                     }
                 }
-                precomputeArray[number][p] = -1;
+                precomputeArray[number][p] = -1;*/
+            }
+        }
+
+        for (int i = board.rows() - 1; i < board.rows(); ++i) {
+            for (int j = 0; j < board.cols() - 1; ++j) {
+                int temp = i * board.cols() + j;
+                precompute.get(temp).add(temp + 1);
+                precompute.get(temp + 1).add(temp);
             }
         }
 
 /*        for (int i = 0; i < board.rows(); ++i) {
             for (int j = 0; j < board.cols(); ++j) {
-                for (int k = 0; k < 8 && precomputeArray[i * board.cols() + j][k] != -1; ++k) {
-                    System.out.print(precomputeArray[i * board.cols() + j][k] + " ");
+                for (int k: precompute.get(i * board.cols() + j)) {
+                    System.out.print(k + " ");
                 }
                 System.out.println();
             }
@@ -140,11 +184,12 @@ public class BoggleSolver
     }
 
     private void deepFirstSearch(BoggleBoard board) {
-        Stack<String> prefixString = new Stack<String>(); 
+        Stack<String> prefixString = new Stack<String>();
+        prefixString.ensureCapacity(1000); 
         Stack<Integer> alreadyBeingUpdate = new Stack<Integer>();
+        alreadyBeingUpdate.ensureCapacity(1000); 
 
         boolean[] alreadyBeing = new boolean[board.rows() * board.cols()];
-        int count = 0;
         for (int i = 0; i < board.rows(); ++i) {
             for (int j = 0; j < board.cols(); ++j) {
                 int start = i * board.cols() + j;
@@ -178,30 +223,30 @@ public class BoggleSolver
 
                     
                     if (sybvols == 'Q') {
-                        if (position.next['U' - 65] == null) {
+                        /*if (position.next['U' - 65] == null) {
                             int count1 = 0;
                             while (!prefixString.isEmpty() && prefixString.peek() == "") {
                                 alreadyBeing[alreadyBeingUpdate.pop()] = false;
                                 prefixString.pop();
-                            if (count1 > 0)
-                            {
-                                position = position.back;
-                            }
-                            count1++;
-                            //System.out.println("True");
+                                if (count1 > 0)
+                                {
+                                    position = position.back;
+                                }
+                                count1++;
                             }
                             continue;
                         }
-                        position = position.next['U' - 65];
+                        position = position.next['U' - 65];*/
                         prefix += 'U';
-                    } 
+                    }
 
                     if (position.value && prefix.length() >= 3) {
                         result.add(prefix);
                     }
 
-                    for (int k = 0; k < 8 && precomputeArray[start][k] != -1; ++k) {
-                        int temp = precomputeArray[start][k];
+                    //for (int k = 0; k < 8 && precomputeArray[start][k] != -1; ++k) {
+                    for (int temp: precompute.get(start)) {
+                        //int temp = precomputeArray[start][k];
                         if (alreadyBeing[temp] == true) {
                             continue;
                         }
@@ -209,22 +254,13 @@ public class BoggleSolver
                         alreadyBeingUpdate.push(temp);
                         prefixString.push(prefix + board.getLetter(temp / board.cols(), temp % board.cols()));
                     }
-                    int count1 = 0;
                     while (!prefixString.isEmpty() && prefixString.peek() == "") {
                         alreadyBeing[alreadyBeingUpdate.pop()] = false;
                         prefixString.pop();
-                            if (count1 > 0)
-                            {
-                                position = position.back;
-                            }
-                            ++count1;
+                            position = position.back;
                     }
 
                 }
-                for (boolean value: alreadyBeing) {
-                        System.out.print(value);
-                }
-                System.out.println();
             }
         }
 
@@ -275,9 +311,8 @@ public class BoggleSolver
         int count = 0;
         for (String word : solver.getAllValidWords(board))
         {
-            StdOut.println(word);
+            //System.out.println(word);
             score += solver.scoreOf(word);
-            StdOut.println(score);
             ++count;
         }
         StdOut.println("Score = " + score + " Count = " + count);
