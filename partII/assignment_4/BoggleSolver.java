@@ -15,6 +15,7 @@ public class BoggleSolver
     // Initializes the data structure using the given array of strings as the dictionary.
     // (You can assume each word in the dictionary contains only the uppercase letters A through Z.)
     public BoggleSolver(String[] dictionary) {
+        root.back = root;
         for (String word: dictionary) {
             Node iterator = root;
             for (int i = 0; i < word.length(); ++i) {
@@ -79,6 +80,15 @@ public class BoggleSolver
                 precomputeArray[number][p] = -1;
             }
         }
+
+/*        for (int i = 0; i < board.rows(); ++i) {
+            for (int j = 0; j < board.cols(); ++j) {
+                for (int k = 0; k < 8 && precomputeArray[i * board.cols() + j][k] != -1; ++k) {
+                    System.out.print(precomputeArray[i * board.cols() + j][k] + " ");
+                }
+                System.out.println();
+            }
+        }*/
         deepFirstSearch(board);
         return result;
     }
@@ -134,37 +144,51 @@ public class BoggleSolver
         Stack<Integer> alreadyBeingUpdate = new Stack<Integer>();
 
         boolean[] alreadyBeing = new boolean[board.rows() * board.cols()];
+        int count = 0;
         for (int i = 0; i < board.rows(); ++i) {
-            for (int j = 0; j < board.cols(); ++j){
-                int start = j * board.cols() + j;
+            for (int j = 0; j < board.cols(); ++j) {
+                int start = i * board.cols() + j;
                 Node position = root;
                 
-                alreadyBeing[start] = true;
                 alreadyBeingUpdate.push(start);
                 
                 prefixString.push("" + board.getLetter(i, j));
                 while (!prefixString.isEmpty()) {
 
                     String prefix = prefixString.pop();
+                    prefixString.push("");
                     char sybvols  = prefix.charAt(prefix.length() - 1);
-                    
+                    start = alreadyBeingUpdate.peek();
+                    alreadyBeing[start] = true;
+
                     if (position.next[sybvols - 65] == null) {
-                        alreadyBeing[alreadyBeingUpdate.pop()] = false;
-                        position = position.back;
-                        if (position == null) {
-                            position = root;
+                        int count1 = 0;
+                        while (!prefixString.isEmpty() && prefixString.peek() == "") {
+                            alreadyBeing[alreadyBeingUpdate.pop()] = false;
+                            prefixString.pop();
+                            if (count1 > 0)
+                            {
+                                position = position.back;
+                            }
+                            count1++;
                         }
                         continue;
                     }
-
                     position = position.next[sybvols - 65];
+
                     
                     if (sybvols == 'Q') {
                         if (position.next['U' - 65] == null) {
-                            alreadyBeing[alreadyBeingUpdate.pop()] = false;
-                            position = position.back;
-                            if (position == null) {
-                                position = root;
+                            int count1 = 0;
+                            while (!prefixString.isEmpty() && prefixString.peek() == "") {
+                                alreadyBeing[alreadyBeingUpdate.pop()] = false;
+                                prefixString.pop();
+                            if (count1 > 0)
+                            {
+                                position = position.back;
+                            }
+                            count1++;
+                            //System.out.println("True");
                             }
                             continue;
                         }
@@ -176,30 +200,31 @@ public class BoggleSolver
                         result.add(prefix);
                     }
 
-                    int size = prefixString.size();
-                    for (int k = 0; k < 8 && precomputeArray[i][k] != -1; ++k) {
-                        start = precomputeArray[i][k];
-                        if (alreadyBeing[start] == true) {
+                    for (int k = 0; k < 8 && precomputeArray[start][k] != -1; ++k) {
+                        int temp = precomputeArray[start][k];
+                        if (alreadyBeing[temp] == true) {
                             continue;
                         }
-                        alreadyBeing[start] = true;
-                        alreadyBeingUpdate.push(start);
-                        prefixString.push(prefix + board.getLetter(start / board.cols(), start % board.cols()));
+                        //alreadyBeing[start] = true;
+                        alreadyBeingUpdate.push(temp);
+                        prefixString.push(prefix + board.getLetter(temp / board.cols(), temp % board.cols()));
                     }
-
-                    if (size == prefixString.size()) {
+                    int count1 = 0;
+                    while (!prefixString.isEmpty() && prefixString.peek() == "") {
                         alreadyBeing[alreadyBeingUpdate.pop()] = false;
-                        position = position.back;
-                        if (position == null) {
-                            position = root;
-                        }
+                        prefixString.pop();
+                            if (count1 > 0)
+                            {
+                                position = position.back;
+                            }
+                            ++count1;
                     }
 
                 }
-
-                while (!alreadyBeingUpdate.isEmpty()) {
-                    alreadyBeing[alreadyBeingUpdate.pop()] = false;
+                for (boolean value: alreadyBeing) {
+                        System.out.print(value);
                 }
+                System.out.println();
             }
         }
 
@@ -252,6 +277,7 @@ public class BoggleSolver
         {
             StdOut.println(word);
             score += solver.scoreOf(word);
+            StdOut.println(score);
             ++count;
         }
         StdOut.println("Score = " + score + " Count = " + count);
