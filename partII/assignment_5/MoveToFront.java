@@ -3,7 +3,7 @@ import edu.princeton.cs.algs4.BinaryStdOut;
 
 public class MoveToFront {
     private static final char ALPH = 256;
-    //private static char[]  indexs    = new char[ALPH];
+    private static char[] characters = new char[ALPH];
     private static char[] indexs = new char[ALPH];
     private static char lastNullElement = 0;
     // apply move-to-front encoding, reading from standard input and writing to standard output
@@ -25,20 +25,21 @@ public class MoveToFront {
 
         while (!BinaryStdIn.isEmpty()) {
             char symbol = BinaryStdIn.readChar();
-            System.out.println(symbol);
-            BinaryStdOut.write(indexs[symbol]);
-            shift(symbol);
-                    for (char i = 0; i < ALPH; ++i) {
-            System.out.print(" " + (int)(indexs[i]));
+            BinaryStdOut.write(characters[symbol]);
+            shift(characters[symbol]);
+                    /*for (char i = 0; i < ALPH; ++i) {
+            System.out.print(" " + (int)(characters[i]));
         }
-        System.out.print("   " + (int)(symbol) + "\n");
+        	System.out.print("   " + (int)(symbol) + "\n");*/
         }
+
         BinaryStdOut.close();
     }
     
     private static void initStruct() {
         for (char i = 0; i < ALPH; ++i) {
             indexs[i] = i;
+            characters[i] = i;
         }
     }
 
@@ -48,15 +49,14 @@ public class MoveToFront {
             ++indexs[lastNullElement];
         }*/
 
-        for (char i = 0; i < ALPH; ++i) {
-            if (indexs[i] < indexs[symbol]) {
-                ++indexs[i];
-            }
+        for (char i = 0; i < indexs[symbol]; ++i) {
+            ++indexs[characters[i]];
         } 
-        //  lastNullElement = indexs[symbol];
+        for (char i = indexs[symbol]; i > 0; --i) {
+        	characters[i] = characters[i - 1];
+        }
+        characters[0] = symbol;
         indexs[symbol] = 0;
-
-
     }
 
     // if args[0] is '-', apply move-to-front encoding
