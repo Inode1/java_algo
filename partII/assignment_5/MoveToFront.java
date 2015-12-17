@@ -8,32 +8,12 @@ public class MoveToFront {
     private static char lastNullElement = 0;
     // apply move-to-front encoding, reading from standard input and writing to standard output
     public static void encode() {
-        initStruct();
-
-        while (!BinaryStdIn.isEmpty()) {
-            char symbol = BinaryStdIn.readChar();
-            //System.out.println(symbol);
-            BinaryStdOut.write(indexs[symbol]);
-            shift(symbol);
-        }
-        BinaryStdOut.close();
+        compute(true);
     }
 
     // apply move-to-front decoding, reading from standard input and writing to standard output
     public static void decode() {
-        initStruct();
-
-        while (!BinaryStdIn.isEmpty()) {
-            char symbol = BinaryStdIn.readChar();
-            BinaryStdOut.write(characters[symbol]);
-            shift(characters[symbol]);
-                    /*for (char i = 0; i < ALPH; ++i) {
-            System.out.print(" " + (int)(characters[i]));
-        }
-        	System.out.print("   " + (int)(symbol) + "\n");*/
-        }
-
-        BinaryStdOut.close();
+        compute(false);
     }
     
     private static void initStruct() {
@@ -43,20 +23,22 @@ public class MoveToFront {
         }
     }
 
-    private static void shift(char symbol) {
-        /*if (lastNullElement > indexs[symbol])
-        {
-            ++indexs[lastNullElement];
-        }*/
+    private static void compute(boolean encode) {
+        initStruct();
 
-        for (char i = 0; i < indexs[symbol]; ++i) {
-            ++indexs[characters[i]];
-        } 
-        for (char i = indexs[symbol]; i > 0; --i) {
-        	characters[i] = characters[i - 1];
+        while (!BinaryStdIn.isEmpty()) {
+            char symbol = BinaryStdIn.readChar();
+            BinaryStdOut.write(encode ? indexs[symbol] : (symbol = characters[symbol]));
+            for (char i = 0; i < indexs[symbol]; ++i) {
+                ++indexs[characters[i]];
+            } 
+            for (char i = indexs[symbol]; i > 0; --i) {
+                characters[i] = characters[i - 1];
+            }
+            characters[0] = symbol;
+            indexs[symbol] = 0;
         }
-        characters[0] = symbol;
-        indexs[symbol] = 0;
+        BinaryStdOut.close();
     }
 
     // if args[0] is '-', apply move-to-front encoding
@@ -64,6 +46,6 @@ public class MoveToFront {
     public static void main(String[] args) {
         if      (args[0].equals("-")) encode();
         else if (args[0].equals("+")) decode();
-        else throw new IllegalArgumentException("Illegal command line argument");	
+        else throw new IllegalArgumentException("Illegal command line argument");   
     }
 }
