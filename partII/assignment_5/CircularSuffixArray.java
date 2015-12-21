@@ -3,7 +3,7 @@ public class CircularSuffixArray {
     private int[] index;
     private int[] aux;
     private int length;
-    private static final int CUTOFF =  5;
+    private static final int CUTOFF =  15;
     private char lowerBound = 0xffff;
     private char upperBound = 0;
     public CircularSuffixArray(String s) {
@@ -28,10 +28,10 @@ public class CircularSuffixArray {
     }
 
     private void sort(String s, int lo, int hi, int d, boolean state){
-        /*if (hi <= lo + CUTOFF) {
+        if (hi <= lo + CUTOFF) {
             insertion(s, lo, hi, d);
             return;
-        }*/
+        }
 
         char sybvol;
         // sort radix
@@ -75,28 +75,32 @@ public class CircularSuffixArray {
             index[i] = aux[i - lo];
         }
 
+        if (lowerBound == upperBound) {
+            return;
+        }
+
         //int k = 0;
         for (char i = lowerBound; i <= upperBound; ++i) {
-            if (radix[i + 1] - radix[i] > 1) {
-                //System.out.println((lo + radix[i - 1]) + " "  + (lo + radix[i]) + "k:" + (++k));
+            if (radix[i + 1] - radix[i] > 1 && d != length - 1) {
+                //System.out.println((lo + radix[i + 1]) + " "  + (lo + radix[i]) + "k:" + (++k));
                 sort(s, lo + radix[i], lo + radix[i + 1], d + 1, true);
             }
         }
     }
 
-    /*private void insertion(String s, int lo, int hi, int d) {
-        for (int i = lo; i <= hi; i++)
-            for (int j = i; j > lo && less(a[j], a[j-1], d); j--)
-                exch(a, j, j-1);
+    private void insertion(String s, int lo, int hi, int d) {
+        for (int i = lo; i < hi; i++)
+            for (int j = i; j > lo && less(s, index[j], index[j-1], d); j--)
+                exch(j, j-1);
     }
 
-    private boolean less(String v, String w, int d) {
+    private boolean less(String s, int k, int j, int d) {
         // assert v.substring(0, d).equals(w.substring(0, d));
-        for (int i = d; i < Math.min(v.length(), w.length()); i++) {
-            if (v.charAt(i) < w.charAt(i)) return true;
-            if (v.charAt(i) > w.charAt(i)) return false;
+        for (int i = d; i < length; i++) {
+            if (s.charAt((i + k) % length) < s.charAt((i + j) % length)) return true;
+            if (s.charAt((i + k) % length) > s.charAt((i + j) % length)) return false;
         }
-        return v.length() < w.length();
+        return true;
     }
 
     // exchange index[i] and index[j]
@@ -104,11 +108,12 @@ public class CircularSuffixArray {
         int swap = index[i];
         index[i] = index[j];
         index[j] = swap;
-    }*/
+    }
 
     // unit testing of the methods (optional)
     public static void main(String[] args) {
-        String s = "AAAAABBBAB";
+        String s = "BAAABBBABB";
+        //String s = "AAAAAAAAAAAA";
         CircularSuffixArray example = new CircularSuffixArray(s);
         for (int i = 0; i < example.length(); ++i) {
             System.out.println(s.substring(example.index(i)) + " index: " + example.index(i));
